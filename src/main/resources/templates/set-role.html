@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Select User Role</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+  <h2 style="text-align: center;">Select Your Role</h2>
+
+  <form th:action="@{/users/set-role}" method="post">
+    <div>
+      <label for="role">Choose your role:</label>
+      <select id="role" name="role" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="" disabled selected>Select your role</option>
+        <option value="ATTENDEE">ATTENDEE</option>
+        <option value="ORGANIZER">ORGANIZER</option>
+      </select>
+    </div>
+    <div>
+      <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Submit</button>
+    </div>
+
+    <div th:if="${error}">
+      <p style="color: red; text-align: center;" th:text="${error}"></p>
+    </div>
+    <div th:if="${success}">
+      <p style="color: green; text-align: center;" th:text="${success}"></p>
+    </div>
+  </form>
+
+  <p style="text-align: center;">If you need to go back, <a th:href="@{/users/login}">click here to login</a>.</p>
+</div>
+</body>
+</html>

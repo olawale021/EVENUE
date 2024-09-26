@@ -1,0 +1,22 @@
+<!-- header.html -->
+<div th:fragment="headerFragment">
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-purple-800">
+                    <a href="#">EVENUE</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-800 hover:text-purple-600">Find Events</a>
+                    <a href="#" class="text-gray-800 hover:text-purple-600">Create Events</a>
+                    <a href="#" class="text-gray-800 hover:text-purple-600">About</a>
+                    <a href="#" class="text-gray-800 hover:text-purple-600">Contact Us</a>
+                </div>
+                <div>
+                    <a href="/users/login" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-300">Login</a>
+                    <a href="/users/register" class="bg-gray-100 text-purple-800 px-4 py-2 rounded-md hover:bg-gray-200 transition duration-300 border border-purple-600">Sign Up</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+</div>

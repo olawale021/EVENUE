@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+<div style="max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+  <h1 style="text-align: center;">Login</h1>
+
+  <form th:action="@{/users/login}" method="post">
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required placeholder="Enter your email" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required placeholder="Enter your password" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+    <div>
+      <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Login</button>
+    </div>
+
+    <div th:if="${error}">
+      <p style="color: red; text-align: center;" th:text="${error}"></p>
+    </div>
+    <div th:if="${success}">
+      <p style="color: green; text-align: center;" th:text="${success}"></p>
+    </div>
+  </form>
+
+  <p style="text-align: center;">Don't have an account? <a th:href="@{/users/register}">Register here</a></p>
+</div>
+</body>
+</html>
