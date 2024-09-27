@@ -1,6 +1,6 @@
 package com.example.evenue.models.users;
 
-public class User {
+public class UserModel {
     private int id;
     private String firstName;
     private String lastName;

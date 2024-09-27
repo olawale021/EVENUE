@@ -13,10 +13,49 @@
                     <a href="#" class="text-gray-800 hover:text-purple-600">Contact Us</a>
                 </div>
                 <div>
-                    <a href="/users/login" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-300">Login</a>
-                    <a href="/users/register" class="bg-gray-100 text-purple-800 px-4 py-2 rounded-md hover:bg-gray-200 transition duration-300 border border-purple-600">Sign Up</a>
+                    <!-- Check if the user is authenticated using Spring Security's #authentication object -->
+                    <div th:if="${#authentication?.isAuthenticated()} and !${#authentication.name.equals('anonymousUser')}" class="relative">
+                        <button id="user-menu-button" class="text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 flex items-center space-x-2">
+                            <span>Welcome, <span th:text="${#authentication.name}"></span></span>
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                            <a href="/users/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Dashboard</a>
+                            <a href="/users/logout" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                    <div th:if="${!#authentication?.isAuthenticated()} or ${#authentication.name.equals('anonymousUser')}">
+                        <a href="/users/login" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition duration-300">Login</a>
+                        <a href="/users/register" class="bg-gray-100 text-purple-800 px-4 py-2 rounded-md hover:bg-gray-200 transition duration-300 border border-purple-600">Sign Up</a>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
+    <th:block th:if="${#authentication?.isAuthenticated()} and !${#authentication.name.equals('anonymousUser')}">
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                const userMenuButton = document.getElementById('user-menu-button');
+                const userMenu = document.getElementById('user-menu');
+
+                if (userMenuButton && userMenu) {
+                    userMenuButton.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        userMenu.classList.toggle('hidden');
+                    });
+
+                    // Close the dropdown if clicked outside
+                    document.addEventListener('click', function(event) {
+                        if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                            userMenu.classList.add('hidden');
+                        }
+                    });
+                }
+            });
+        </script>
+    </th:block>
 </div>
+

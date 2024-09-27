@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public class UserDao {
 
     // Method to insert a new user
-    public void insertUser(User user) throws SQLException {
+    public void insertUser(UserModel user) throws SQLException {
         String query = "INSERT INTO users (email, password) VALUES (?, ?)";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement pstmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -30,17 +30,21 @@ public class UserDao {
     }
 
     // Method to find a user by email
-    public User findUserByEmail(String email) {
+    public UserModel findUserByEmail(String email) {
+        System.out.println("Searching for user with email: " + email); // Add this log
         String query = "SELECT * FROM users WHERE email = ?";
-        User user = null;
+        UserModel user = null;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
 
-            stmt.setString(1, email);
+            stmt.setString(1, email); // This will properly handle quoting the email
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     user = mapResultSetToUser(rs);
+                    System.out.println("User found: " + user.getEmail()); // Add this log
+                } else {
+                    System.out.println("No user found for email: " + email); // Add this log
                 }
             }
         } catch (SQLException e) {
@@ -51,9 +55,9 @@ public class UserDao {
     }
 
     // Method to find a user by ID
-    public User findUserById(int id) {
+    public UserModel findUserById(int id) {
         String query = "SELECT * FROM users WHERE id = ?";
-        User user = null;
+        UserModel user = null;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -72,7 +76,7 @@ public class UserDao {
     }
 
     // Method to update user's role
-    public void updateUserRole(User user) throws SQLException {
+    public void updateUserRole(UserModel user) throws SQLException {
         String query = "UPDATE users SET role = ? WHERE id = ?";
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -83,9 +87,9 @@ public class UserDao {
         }
     }
 
-    // Utility method to map ResultSet to User object
-    private User mapResultSetToUser(ResultSet rs) throws SQLException {
-        User user = new User();
+    // Utility method to map ResultSet to UserModel object
+    private UserModel mapResultSetToUser(ResultSet rs) throws SQLException {
+        UserModel user = new UserModel();
         user.setId(rs.getInt("id"));
         user.setFirstName(rs.getString("first_name"));
         user.setLastName(rs.getString("last_name"));
