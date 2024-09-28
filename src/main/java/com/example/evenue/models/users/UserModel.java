@@ -1,26 +1,69 @@
 package com.example.evenue.models.users;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class UserModel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private int id;
+
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
+
+    @Column(name = "password", nullable = false)
     private String password;
+
+    @Column(name = "contact_number")
     private String contactNumber;
+
+    @Column(name = "date_of_birth")
     private String dateOfBirth;
+
+    @Column(name = "profile_picture")
     private String profilePicture;
-    private String role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role") // Nullable by default
+    private Role role; // Using the Role enum, but can be null
+
+    @Column(name = "address_line1")
     private String addressLine1;
+
+    @Column(name = "city")
     private String city;
+
+    @Column(name = "state")
     private String state;
+
+    @Column(name = "postal_code")
     private String postalCode;
+
+    @Column(name = "country")
     private String country;
+
+    @Column(name = "preferred_categories")
     private String preferredCategories;
+
+    @Column(name = "preferred_payment_method")
     private String preferredPaymentMethod;
+
+    @Column(name = "created_at")
     private String createdAt;
+
+    @Column(name = "updated_at")
     private String updatedAt;
 
-    // Getters and setters for all fields
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -85,11 +128,11 @@ public class UserModel {
         this.profilePicture = profilePicture;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

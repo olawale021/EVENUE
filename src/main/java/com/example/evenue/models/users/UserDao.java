@@ -1,113 +1,28 @@
 package com.example.evenue.models.users;
 
-import com.example.evenue.utils.DBConnection;
+import com.example.evenue.models.users.UserModel;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public class UserDao {
+public interface UserDao extends JpaRepository<UserModel, Integer> {
 
-    // Method to insert a new user
-    public void insertUser(UserModel user) throws SQLException {
-        String query = "INSERT INTO users (email, password) VALUES (?, ?)";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+    // Custom query to update the user role by user ID
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserModel u SET u.role = :role WHERE u.id = :id")
+    void updateUserRoleById(@Param("role") Role role, @Param("id") int id);
 
-            pstmt.setString(1, user.getEmail());
-            pstmt.setString(2, user.getPassword());
-            pstmt.executeUpdate(); // Execute the insert statement
+    // Custom query to update the user role by email
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserModel u SET u.role = :role WHERE u.email = :email")
+    void updateUserRoleByEmail(String role, String email);
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    user.setId(generatedKeys.getInt(1)); // Set the generated ID to the user object
-                }
-            }
-        }
-    }
-
-    // Method to find a user by email
-    public UserModel findUserByEmail(String email) {
-        System.out.println("Searching for user with email: " + email); // Add this log
-        String query = "SELECT * FROM users WHERE email = ?";
-        UserModel user = null;
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-
-            stmt.setString(1, email); // This will properly handle quoting the email
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    user = mapResultSetToUser(rs);
-                    System.out.println("User found: " + user.getEmail()); // Add this log
-                } else {
-                    System.out.println("No user found for email: " + email); // Add this log
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding user by email: " + e.getMessage());
-        }
-
-        return user;
-    }
-
-    // Method to find a user by ID
-    public UserModel findUserById(int id) {
-        String query = "SELECT * FROM users WHERE id = ?";
-        UserModel user = null;
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    user = mapResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error finding user by ID: " + e.getMessage());
-        }
-
-        return user;
-    }
-
-    // Method to update user's role
-    public void updateUserRole(UserModel user) throws SQLException {
-        String query = "UPDATE users SET role = ? WHERE id = ?";
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(query)) {
-
-            pstmt.setString(1, user.getRole());
-            pstmt.setInt(2, user.getId());
-            pstmt.executeUpdate(); // Execute the update statement
-        }
-    }
-
-    // Utility method to map ResultSet to UserModel object
-    private UserModel mapResultSetToUser(ResultSet rs) throws SQLException {
-        UserModel user = new UserModel();
-        user.setId(rs.getInt("id"));
-        user.setFirstName(rs.getString("first_name"));
-        user.setLastName(rs.getString("last_name"));
-        user.setEmail(rs.getString("email"));
-        user.setPassword(rs.getString("password"));
-        user.setContactNumber(rs.getString("contact_number"));
-        user.setDateOfBirth(rs.getString("date_of_birth"));
-        user.setProfilePicture(rs.getString("profile_picture"));
-        user.setRole(rs.getString("role"));
-        user.setAddressLine1(rs.getString("address_line1"));
-        user.setCity(rs.getString("city"));
-        user.setState(rs.getString("state"));
-        user.setPostalCode(rs.getString("postal_code"));
-        user.setCountry(rs.getString("country"));
-        user.setPreferredCategories(rs.getString("preferred_categories"));
-        user.setPreferredPaymentMethod(rs.getString("preferred_payment_method"));
-        user.setCreatedAt(rs.getString("created_at"));
-        user.setUpdatedAt(rs.getString("updated_at"));
-        return user;
-    }
+    // Other custom query methods
+    UserModel findByEmail(String email);
 }

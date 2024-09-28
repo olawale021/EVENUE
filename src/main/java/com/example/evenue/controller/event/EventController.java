@@ -6,6 +6,7 @@ import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.users.UserDao;
 import com.example.evenue.models.users.UserModel;
 import com.example.evenue.service.EventService;
+import com.example.evenue.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,7 +31,7 @@ public class EventController {
     private EventCategoryDao eventCategoryDao;
 
     @Autowired
-    private UserDao userDao; // Using UserDao instead of UserService
+    private UserService userService;
 
     // Endpoint to display the create event form
     @GetMapping("/create")
@@ -56,7 +57,7 @@ public class EventController {
         // Get the currently logged-in user ID from the security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String loggedInUserEmail = authentication.getName(); //  the username is the email
-        UserModel loggedInUser = userDao.findUserByEmail(loggedInUserEmail); // Using UserDao to get user details
+        UserModel loggedInUser = userService.findUserByEmail(loggedInUserEmail); // Using UserDao to get user details
 
         // Set the organizer ID from the logged-in user
         if (loggedInUser != null) {

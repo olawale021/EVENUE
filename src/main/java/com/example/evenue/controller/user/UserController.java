@@ -1,25 +1,19 @@
 package com.example.evenue.controller.user;
 
 import com.example.evenue.models.users.UserModel;
-import com.example.evenue.models.users.UserDao;
+import com.example.evenue.service.UserService;
+import com.example.evenue.models.users.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttributes;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,12 +22,12 @@ import java.util.List;
 @SessionAttributes("userId") // Using Spring's session management
 public class UserController {
 
-    private final UserDao userDao;
+    private final UserService userService; // Inject UserService
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserController(UserDao userDao, BCryptPasswordEncoder passwordEncoder) {
-        this.userDao = userDao;
+    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -51,14 +45,14 @@ public class UserController {
     @PostMapping("/logout")
     public String logout(Model model) {
         model.addAttribute("userId", null); // Clear the user ID from the model
+        SecurityContextHolder.clearContext(); // Clear the security context
         return "redirect:/users/login"; // Redirect to the login page
     }
-
 
     // Register a new user with email and password, and set user ID in session
     @PostMapping("/register")
     public String registerUser(@RequestParam String email, @RequestParam String password, Model model) {
-        if (userDao.findUserByEmail(email) != null) {
+        if (userService.findUserByEmail(email) != null) { // Use userService
             model.addAttribute("error", "Email already in use.");
             return "register"; // Return to the registration form with an error message
         }
@@ -66,30 +60,45 @@ public class UserController {
         UserModel newUser = new UserModel();
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password)); // Encrypt the password
+        newUser.setRole(null); // Initially, the role is set to null
 
-        try {
-            userDao.insertUser(newUser); // This will set the ID in the newUser object
-            model.addAttribute("userId", newUser.getId()); // Store user ID in the model
-            return "redirect:/users/set-role"; // Redirect to the role selection page
-        } catch (SQLException e) {
-            model.addAttribute("error", "Error registering user: " + e.getMessage());
-            return "register"; // Return to the registration form with an error message
-        }
+        userService.saveUser(newUser); // Save the new user using userService
+        model.addAttribute("userId", newUser.getId()); // Store user ID in the model
+        return "redirect:/users/set-role"; // Redirect to the role selection page
     }
+
 
     // Handle user login
     @PostMapping("/login")
     public String loginUser(@RequestParam String email, @RequestParam String password, Model model) {
-        UserModel user = userDao.findUserByEmail(email);
+        UserModel user = userService.findUserByEmail(email);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             model.addAttribute("error", "Invalid email or password.");
             return "login"; // Return to the login form with an error message
         }
 
-        // Successful login, store user ID in the session
+        // If role is null, redirect to set-role page
+        if (user.getRole() == null) {
+            model.addAttribute("userId", user.getId());
+            return "redirect:/users/set-role";
+        }
+
         model.addAttribute("userId", user.getId());
-        return "redirect:/users/dashboard"; // Redirect to the dashboard
+        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        Authentication auth = new UsernamePasswordAuthenticationToken(user.getEmail(), password, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        // Redirect based on role
+        if (user.getRole() == Role.ORGANIZER) {
+            return "redirect:/organizer/dashboard";
+        } else if (user.getRole() == Role.ATTENDEE) {
+            return "redirect:/users/dashboard";
+        } else {
+            return "redirect:/users/set-role"; // Fallback in case role is not set correctly
+        }
     }
+
+
 
     // Serve the dashboard page
     @GetMapping("/dashboard")
@@ -100,7 +109,7 @@ public class UserController {
         }
 
         String email = authentication.getName(); // This will be the email address
-        UserModel user = userDao.findUserByEmail(email);
+        UserModel user = userService.findUserByEmail(email); // Use userService
 
         if (user == null) {
             // This shouldn't happen if the user is authenticated, but just in case
@@ -114,59 +123,55 @@ public class UserController {
     // Serve the role selection page
     @GetMapping("/set-role")
     public String showRoleSelectionForm(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return "redirect:/users/login";
+        Integer userId = (Integer) model.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/users/login"; // If there's no user in session, redirect to login
         }
 
-        String email = auth.getName();
-        UserModel user = userDao.findUserByEmail(email);
-
+        UserModel user = userService.findUserById(userId); // Fetch user by ID
         if (user == null) {
             return "redirect:/users/register";
         }
 
-        model.addAttribute("email", email);
+        model.addAttribute("email", user.getEmail());
         return "set-role";
     }
 
+
     // Handle role selection
     @PostMapping("/set-role")
-    public String setUserRole(@RequestParam String role, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/users/login";
+    public String setUserRole(@RequestParam String role, Model model, Authentication authentication) {
+        Integer userId = (Integer) model.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/users/login"; // If there's no user in session, redirect to login
         }
 
-        String email = authentication.getName();
-        UserModel user = userDao.findUserByEmail(email);
-
+        UserModel user = userService.findUserById(userId); // Fetch user by ID
         if (user == null) {
             return "redirect:/users/register";
         }
 
-        // Validate role
-        if (!role.equals("ORGANIZER") && !role.equals("ATTENDEE")) {
-            return "redirect:/users/set-role?error=invalid_role";
-        }
-
-        // Set the user's role and update in the database
-        user.setRole(role);
+        // Convert the string role to the Role enum
         try {
-            userDao.updateUserRole(user);
+            Role userRole = Role.valueOf(role.toUpperCase());
+
+            // Update the role in the database
+            userService.updateUserRoleById(userRole, userId);
 
             // Update the security context with the new role
-            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
             Authentication newAuth = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), authorities);
             SecurityContextHolder.getContext().setAuthentication(newAuth);
 
             // Determine redirect based on new role
-            if (role.equals("ORGANIZER")) {
+            if (userRole == Role.ORGANIZER) {
                 return "redirect:/organizer/dashboard";
             } else {
                 return "redirect:/users/dashboard";
             }
-        } catch (SQLException e) {
-            return "redirect:/users/set-role?error=database_error";
+        } catch (IllegalArgumentException e) {
+            // Invalid role provided
+            return "redirect:/users/set-role?error=invalid_role";
         }
     }
 }

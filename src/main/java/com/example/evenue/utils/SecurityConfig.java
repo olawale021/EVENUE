@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import java.io.IOException;
 
@@ -39,7 +40,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
+<<<<<<< HEAD
                         .requestMatchers("/","/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
+=======
+                        .requestMatchers("/", "/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
+>>>>>>> cb50d73 (added browse-events fragment in index.html)
                         .requestMatchers("/organizer/**").hasRole("ORGANIZER")
                         .requestMatchers("/users/dashboard").hasRole("ATTENDEE")
                         .anyRequest().authenticated()
@@ -56,13 +61,18 @@ public class SecurityConfig {
                                         .map(GrantedAuthority::getAuthority)
                                         .findFirst()
                                         .orElse("");
-                                if (role.equals("ROLE_ORGANIZER")) {
-                                    response.sendRedirect("/organizer/dashboard");
-                                } else if (role.equals("ROLE_ATTENDEE")) {
-                                    response.sendRedirect("/users/dashboard");
-                                } else {
-                                    // If role is null or empty, redirect to set-role page
-                                    response.sendRedirect("/users/set-role");
+
+                                switch (role) {
+                                    case "ROLE_ORGANIZER":
+                                        response.sendRedirect("/organizer/dashboard");
+                                        break;
+                                    case "ROLE_ATTENDEE":
+                                        response.sendRedirect("/");
+                                        break;
+                                    case "ROLE_GUEST":
+                                    default:
+                                        response.sendRedirect("/users/set-role");
+                                        break;
                                 }
                             }
                         })
@@ -71,8 +81,6 @@ public class SecurityConfig {
                             public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                                                 AuthenticationException exception) throws IOException {
                                 System.out.println("Authentication failed: " + exception.getMessage());
-                                System.out.println("Email parameter: " + request.getParameter("email"));
-                                exception.printStackTrace();
                                 response.sendRedirect("/users/login?error=true");
                             }
                         })
@@ -80,10 +88,16 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/users/logout")
-                        .logoutSuccessUrl("/users/login")
+                        .logoutSuccessHandler((request, response, authentication) -> response.sendRedirect("/users/login"))
+                        .invalidateHttpSession(true)  // Invalidate the session
+                        .deleteCookies("JSESSIONID")  // Delete the session cookie
                         .permitAll()
                 )
                 .userDetailsService(userDetailsService);
+
+        // Enable CSRF protection for all routes by default.
+        // Uncomment the following line if you want to disable CSRF protection (not recommended for production).
+        // http.csrf().disable();
 
         return http.build();
     }

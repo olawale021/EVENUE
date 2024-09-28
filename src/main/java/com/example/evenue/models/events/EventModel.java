@@ -2,7 +2,6 @@ package com.example.evenue.models.events;
 
 import com.example.evenue.models.events.EventCategory;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -13,48 +12,48 @@ public class EventModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long eventId; // Primary key field
+    @Column(name = "event_id") // Match with your database column name
+    private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "organizer_id", nullable = false)
     private Integer organizerId; // Organizer's ID from users table
 
     private String organizerName; // Name of the organization organizing the event
 
-    @Column(nullable = false)
+    @Column(name = "event_name", nullable = false)
     private String eventName; // Name of the event
 
     private String description; // Description of the event
 
     private String location; // Location of the event
 
-    @Column(nullable = false)
+    @Column(name = "event_date", nullable = false)
     private LocalDate eventDate; // Date of the event
 
-    @Column(nullable = false)
+    @Column(name = "start_time", nullable = false)
     private LocalTime startTime; // Start time of the event
 
-    @Column(nullable = false)
+    @Column(name = "end_time", nullable = false)
     private LocalTime endTime; // End time of the event
 
-    @Column(nullable = false)
+    @Column(name = "ticket_price", nullable = false)
     private Double ticketPrice; // Price of the ticket
 
-    @Column(nullable = true)
+    @Column(name = "event_image")
     private String eventImage; // URL or path to the event image
 
     @Column(nullable = false)
     private String venue; // Venue of the event
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now(); // Creation timestamp
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now(); // Last update timestamp
 
-    // New field for event category
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id", nullable = false) // Foreign key column to reference event_categories table
-    private EventCategory eventCategory;
+    @JoinColumn(name = "category_id", nullable = false)
+    private EventCategory eventCategory; // Reference to EventCategory entity
 
     // Constructors
     public EventModel() {}
@@ -77,12 +76,12 @@ public class EventModel {
 
     // Getters and Setters
 
-    public Long getEventId() {
-        return eventId;
+    public Long getId() {
+        return id;
     }
 
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Integer getOrganizerId() {
@@ -165,6 +164,14 @@ public class EventModel {
         this.eventImage = eventImage;
     }
 
+    public String getVenue() {
+        return venue;
+    }
+
+    public void setVenue(String venue) {
+        this.venue = venue;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -189,11 +196,13 @@ public class EventModel {
         this.eventCategory = eventCategory;
     }
 
-    public String getVenue() {
-        return venue;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
-    public void setVenue(String venue) {
-        this.venue = venue;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
