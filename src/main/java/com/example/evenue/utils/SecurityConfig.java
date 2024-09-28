@@ -39,7 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/","/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/organizer/**").hasRole("ORGANIZER")
                         .requestMatchers("/users/dashboard").hasRole("ATTENDEE")
                         .anyRequest().authenticated()

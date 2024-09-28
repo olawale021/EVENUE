@@ -11,11 +11,11 @@
             font-family: 'Poppins', sans-serif;
         }
         .hero-section {
-            background-image: url('https://res.cloudinary.com/dtvclnkeo/image/upload/v1727123547/qxhaz1ccctedupxp28cq.png'); /* Replace with your image URL */
+            background-image: url('https://res.cloudinary.com/dtvclnkeo/image/upload/v1727479157/u3n41xtbbydj2hyuhm98.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            height: 60vh;
+            height: 50vh;
             display: flex;
             justify-content: center;
             align-items: flex-end; /* Align content to the bottom */
@@ -77,9 +77,9 @@
     </section>
 
     <!-- Event Categories Section -->
-    <section class="py-12 bg-white">
+    <section class="py-8 bg-white">
         <div class="event-categories">
-            <div class="grid grid-cols-4 md:grid-cols-8 gap-6 text-center">
+            <div class="grid grid-cols-4 md:grid-cols-8 gap-4 text-center">
                 <div class="flex flex-col items-center">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -166,31 +166,15 @@
     </section>
 
     <!-- Featured Events Section -->
-    <section class="py-16 bg-white">
-        <div class="container mx-auto px-6">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Events</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Featured Event Card (repeat for each event) -->
-                <div th:each="event : ${featuredEvents}" class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition duration-300">
-                    <img th:src="${event.imageUrl}" alt="Event Image" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 th:text="${event.name}" class="text-xl font-semibold mb-2 text-purple-800">Event Name</h3>
-                        <p th:text="${event.description}" class="text-gray-600 mb-4">Event description goes here...</p>
-                        <div class="flex justify-between items-center">
-                            <span th:text="${event.date}" class="text-sm text-gray-500">Date</span>
-                            <a href="#" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-300">Book Now</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <section>
+        <div th:insert="~{browse-events :: browse-events}"></div>
     </section>
 
     <!-- Features Section -->
-    <section class="bg-gray-100 py-16">
-        <div class="container mx-auto px-6">
+    <section class="bg-gray-100 py-8">
+        <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-gray-800 mb-12 text-center">Why Choose EVENUE?</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
                 <div class="bg-white p-8 rounded-lg shadow-lg text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -218,10 +202,11 @@
             </div>
         </div>
     </section>
+
 </main>
 
 <!-- Footer Section -->
-<footer class="bg-gray-800 text-white py-12">
+<footer class="bg-gray-800 text-white py-8">
     <div class="container mx-auto px-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
