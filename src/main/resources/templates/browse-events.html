@@ -1,81 +1,155 @@
-<div th:fragment="browse-events">
-  <section class="py-2 bg-white">
-    <div class="container mx-auto px-4">
-      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Events</h2>
-      <div style="display: flex; justify-content: center;">
-        <div style="flex: 1; background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 2rem; position: relative; overflow: hidden;">
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Events</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Custom styles for the sticky sponsor banner */
+    .sticky-banner {
+      top: 2rem; /* Space from the top */
+    }
+  </style>
+</head>
 
-          <!-- Scroll Left Button -->
-          <button id="scrollLeft" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); background-color: white; border-radius: 9999px; padding: 0.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 10; border: none; display: none;">
-            <svg style="width: 1.5rem; height: 1.5rem; color: #4b5563;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
+<!-- Header Section -->
+<div th:insert="~{header :: headerFragment}"></div>
 
-          <!-- Carousel Container -->
-          <div id="eventContainer" style="overflow-x: auto; display: flex; gap: 1rem; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; padding-bottom: 1rem;">
-            <!-- Event Cards -->
-            <div th:each="event : ${events}" style="flex: 0 0 25%; min-width: 250px; background-color: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
-              <img th:src="${event.eventImage}" alt="Event Image" style="width: 100%; height: 10rem; object-fit: cover;">
-              <div style="padding: 1rem;">
-                <span style="display: inline-block; background-color: #e0e7ff; color: #4338ca; font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 9999px; margin-bottom: 0.5rem;">Sales end soon</span>
-                <h3 th:text="${event.eventName}" style="font-size: 1.1rem; font-weight: bold; color: #1f2937; margin-bottom: 0.5rem;"></h3>
-                <p th:text="${#temporals.format(event.eventDate, 'EEE, MMM d') + ' • ' + event.startTime}" style="color: #4b5563; font-size: 0.9rem; margin-bottom: 0.5rem;"></p>
-                <p th:text="${event.location}" style="color: #4b5563; font-size: 0.9rem; margin-bottom: 0.5rem;"></p>
-                <p style="color: #1f2937; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem;" th:text="'From £' + ${#numbers.formatDecimal(event.ticketPrice, 1, 2)}"></p>
-                <p style="color: #4b5563; display: flex; align-items: center; font-size: 0.8rem;">
-                  <span th:text="${event.organizerName}"></span>
-                  <span style="margin: 0 0.5rem;">•</span>
-                  <svg style="width: 0.8rem; height: 0.8rem; color: #4b5563; margin-right: 0.25rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
-                  </svg>
-                  <span th:text="${event.venue}"></span>
-                </p>
-              </div>
-            </div>
-          </div>
+<body class="bg-gray-30">
+<div class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-2 mt-8">Explore Events</h1>
+  <p class="text-gray-600 mb-6">Search for something you love or check out popular events in your area.</p>
 
-          <!-- Scroll Right Button -->
-          <button id="scrollRight" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background-color: white; border-radius: 9999px; padding: 0.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); z-index: 10; border: none;">
-            <svg style="width: 1.5rem; height: 1.5rem; color: #4b5563;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
+  <div class="flex">
+    <!-- Filters Column -->
+    <div class="w-1/4 pr-6">
+      <h2 class="text-xl font-bold mb-4">Filters</h2>
+
+      <!-- Category Filter -->
+      <div class="mb-4">
+        <h3 class="font-semibold mb-2">Category</h3>
+        <div th:each="category : ${categories}" class="flex items-center mb-2">
+          <input type="checkbox" th:id="${'category-' + category.id}" th:value="${category.id}" class="mr-2">
+          <!-- Category icons -->
+          <svg th:if="${category.name == 'Business'}" class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+          <svg th:if="${category.name == 'Food & Drink'}" class="w-4 h-4 mr-2 text-red-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+          <svg th:if="${category.name == 'Health'}" class="w-4 h-4 mr-2 text-green-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.5 13H8v-3h2.5V7.5h3V10H16v3h-2.5v2.5h-3V13zM12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+          <svg th:if="${category.name == 'Music'}" class="w-4 h-4 mr-2 text-purple-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          <label th:for="${'category-' + category.id}" th:text="${category.name}" class="text-sm"></label>
+        </div>
+        <a href="#" class="text-blue-600 text-sm">View more</a>
+      </div>
+
+      <!-- Date Filter -->
+      <div class="mb-4">
+        <h3 class="font-semibold mb-2">Date</h3>
+        <div th:each="dateOption : ${dateOptions}" class="flex items-center mb-2">
+          <input type="radio" th:id="${'date-' + dateOption.value}" th:value="${dateOption.value}" name="date" class="mr-2">
+          <label th:for="${'date-' + dateOption.value}" th:text="${dateOption.label}" class="text-sm"></label>
+        </div>
+        <a href="#" class="text-blue-600 text-sm">View more</a>
+      </div>
+
+      <!-- Price Filter -->
+      <div class="mb-4">
+        <h3 class="font-semibold mb-2">Price</h3>
+        <div class="flex items-center mb-2">
+          <input type="radio" id="price-free" value="free" name="price" class="mr-2">
+          <label for="price-free" class="text-sm">Free</label>
+        </div>
+        <div class="flex items-center mb-2">
+          <input type="radio" id="price-paid" value="paid" name="price" class="mr-2">
+          <label for="price-paid" class="text-sm">Paid</label>
+        </div>
+      </div>
+
+      <!-- Format Filter -->
+      <div>
+        <h3 class="font-semibold mb-2">Format</h3>
+        <div class="flex items-center mb-2">
+          <input type="checkbox" id="format-class" value="class" class="mr-2">
+          <label for="format-class" class="text-sm">Class</label>
+        </div>
+        <div class="flex items-center mb-2">
+          <input type="checkbox" id="format-conference" value="conference" class="mr-2">
+          <label for="format-conference" class="text-sm">Conference</label>
         </div>
       </div>
     </div>
-  </section>
 
-  <script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-      const container = document.getElementById('eventContainer');
-      const leftButton = document.getElementById('scrollLeft');
-      const rightButton = document.getElementById('scrollRight');
+    <!-- Events Column -->
+    <div class="w-3/4">
+      <div th:each="event : ${events}" class="bg-white rounded-lg p-4 mb-4 transition transform hover:shadow-lg hover:rounded-lg" style="width: 65%; list-style: none">
+        <div class="flex">
+          <img th:src="${event.eventImage}" alt="Event Image" class="w-1/3 h-32 object-cover rounded-lg mr-4">
+          <div class="w-2/3">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="text-purple-600 text-sm font-semibold">Sales end soon</span>
+                <h3>
+                  <a th:href="@{/events/details/{eventId}(eventId=${event.id})}"
+                     th:text="${event.eventName}"
+                     class="text-l font-bold text-black hover:underline">
+                  </a>
+                </h3>
+              </div>
+              <div class="flex space-x-2">
+                <button class="text-gray-400 hover:text-gray-600">
+                  <!-- Share icon -->
+                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08C17.24 16.08 16.56 16.38 16.06 16.88L8.91 12.7C8.96 12.47 9 12.24 9 12C9 11.76 8.96 11.53 8.91 11.3L15.96 7.16C16.5 7.66 17.21 8 18 8C19.66 8 21 6.66 21 5C21 3.34 19.66 2 18 2C16.34 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.84C7.5 9.34 6.79 9 6 9C4.34 9 3 10.34 3 12C3 13.66 4.34 15 6 15C6.79 15 7.5 14.66 8.04 14.16L15.19 18.34C15.14 18.56 15.1 18.78 15.1 19C15.1 20.66 16.44 22 18.1 22C19.76 22 21.1 20.66 21.1 19C21.1 17.34 19.76 16 18.1 16Z"/></svg>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <!-- Like icon -->
+                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.1 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12.1 21.35Z"/></svg>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <!-- More options icon -->
+                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center text-sm text-gray-600 mb-1">
+              <p th:text="${event.eventDate}"></p>
+              <p class="mx-2">•</p>
+              <p th:text="${event.startTime}"></p>
+            </div>
+            <p th:text="${event.location}" class="text-sm text-gray-600 mb-2"></p>
+            <p th:text="${'From £' + event.ticketPrice}" class="font-semibold"></p>
+            <span th:if="${event.venue}" th:text="${event.venue}" class="text-sm font-semibold text-gray-700"></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      function updateButtonVisibility() {
-        leftButton.style.display = container.scrollLeft > 0 ? 'block' : 'none';
-        rightButton.style.display =
-                container.scrollLeft < container.scrollWidth - container.clientWidth - 10 ? 'block' : 'none';
-      }
+    <div class="w-1/4">
+      <div class="sticky-banner sticky">
+        <h2 class="text-xl font-bold mb-4">Our Sponsors</h2>
 
-      leftButton.addEventListener('click', () => {
-        container.scrollBy({ left: -container.clientWidth / 2, behavior: 'smooth' });
-      });
+        <!-- Sponsor Banner 1 -->
+        <div class="bg-white shadow-lg rounded-lg p-4 mb-6">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7J_jO7Ko7S4X7oo0p8OmjF896F34pIALn3A&s" alt="Sponsor Logo" class="w-full h-24 object-contain mb-2">
+          <p class="text-gray-600 text-sm mb-2">Check out amazing events sponsored by our partners.</p>
+          <a href="#" class="block bg-blue-500 text-white text-center py-2 rounded-md hover:bg-blue-600">Learn More</a>
+        </div>
 
-      rightButton.addEventListener('click', () => {
-        container.scrollBy({ left: container.clientWidth / 2, behavior: 'smooth' });
-      });
+        <!-- Sponsor Banner 2 -->
+        <div class="bg-white shadow-lg rounded-lg p-4 mb-6">
+          <img src="https://miro.medium.com/v2/resize:fit:1200/1*KGCOY83jkn-cXBfQxTWLcg.png" alt="Sponsor Logo" class="w-full h-24 object-contain mb-2">
+          <p class="text-gray-600 text-sm mb-2">Discover exclusive deals and offers from our sponsors.</p>
+          <a href="#" class="block bg-green-500 text-white text-center py-2 rounded-md hover:bg-green-600">Explore Offers</a>
+        </div>
 
-      container.addEventListener('scroll', updateButtonVisibility);
-      window.addEventListener('resize', updateButtonVisibility);
+        <!-- Sponsor Banner 3 -->
+        <div class="bg-white shadow-lg rounded-lg p-4 mb-6">
+          <img src="https://jdsportsblog.s3.amazonaws.com/wp-content/uploads/2022/01/Desktop_Homepage_Middle_Banner-1704x740_Home.jpg" alt="Sponsor Logo" class="w-full h-24 object-contain mb-2">
+          <p class="text-gray-600 text-sm mb-2">Experience top-notch services and products from our sponsors.</p>
+          <a href="#" class="block bg-red-500 text-white text-center py-2 rounded-md hover:bg-red-600">Check Services</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      // Hide scrollbar
-      container.style.scrollbarWidth = 'none';
-      container.style.msOverflowStyle = 'none';
-      container.style.overflow = 'hidden';
-
-      // Initial check for button visibility
-      updateButtonVisibility();
-    });
-  </script>
 </div>
+</body>
+</html>

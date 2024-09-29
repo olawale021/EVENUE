@@ -36,17 +36,35 @@ public class OrganizerController {
             return "redirect:/users/login";
         }
 
-        // Fetch events for this organizer
-        // List<EventModel> upcomingEvents = eventDao.getUpcomingEventsByOrganizer(organizer.getId());
-        // List<EventModel> pastEvents = eventDao.getPastEventsByOrganizer(organizer.getId());
+
 
         // Add attributes to the model
         model.addAttribute("organizer", organizer);
-        // model.addAttribute("upcomingEvents", upcomingEvents);
-        // model.addAttribute("pastEvents", pastEvents);
-        // model.addAttribute("totalEvents", upcomingEvents.size() + pastEvents.size());
+
 
         // Return the view name
         return "organizer-dashboard";
+    }
+
+    // New endpoint for listing all events created by the organizer
+    @GetMapping("/events")
+    public String listOrganizerEvents(Model model) {
+        // Get the currently authenticated user
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserModel organizer = userService.findUserByEmail(auth.getName());
+
+        // Check if the user is an organizer and has a non-null role
+        if (organizer == null || organizer.getRole() == null || organizer.getRole() != Role.ORGANIZER) {
+            return "redirect:/users/login";
+        }
+
+        // Fetch events created by this organizer
+        List<EventModel> events = eventDao.findByOrganizerId(organizer.getId());
+
+        // Add attributes to the model
+        model.addAttribute("events", events);
+
+        // Return the view name for the organizer events page
+        return "organizer-events";
     }
 }

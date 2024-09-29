@@ -3,9 +3,11 @@ package com.example.evenue.controller.event;
 import com.example.evenue.models.events.EventCategory;
 import com.example.evenue.models.events.EventCategoryDao;
 import com.example.evenue.models.events.EventModel;
+import com.example.evenue.models.tickets.TicketTypeModel;
 import com.example.evenue.models.users.UserDao;
 import com.example.evenue.models.users.UserModel;
 import com.example.evenue.service.EventService;
+import com.example.evenue.service.TicketTypeService;
 import com.example.evenue.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -32,6 +34,9 @@ public class EventController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private TicketTypeService ticketTypeService;
 
     // Endpoint to display the create event form
     @GetMapping("/create")
@@ -94,5 +99,72 @@ public class EventController {
         eventService.addEvent(event);
         model.addAttribute("message", "Event created successfully!");
         return "redirect:/events/create";
+    }
+
+    // Browse events - GET method to display events
+    @GetMapping("/browse")
+    public String browseEvents(Model model) {
+        // Fetch all events
+        List<EventModel> events = eventService.getAllEvents();
+        model.addAttribute("events", events);
+
+        // Fetch all categories for filtering purposes
+        List<EventCategory> categories = eventCategoryDao.findAll();
+        model.addAttribute("categories", categories);
+
+        return "browse-events";
+    }
+
+    // Browse events - POST method to handle filtering of events
+    @PostMapping("/browse")
+    public String filterEvents(
+            @RequestParam("category") Long categoryId,
+            @RequestParam("search") String search,
+            @RequestParam("sortBy") String sortBy,
+            Model model) {
+
+        // Filter events based on category, search text, and sort order
+        List<EventModel> filteredEvents = eventService.filterEvents(categoryId, search, sortBy);
+        model.addAttribute("events", filteredEvents);
+
+        // Also add the categories again for the filter dropdown
+        List<EventCategory> categories = eventCategoryDao.findAll();
+        model.addAttribute("categories", categories);
+
+        return "browse-events"; // Return to the browse events page with filtered results
+    }
+
+    // Endpoint to display event details
+    @GetMapping("/details/{eventId}")
+    public String eventDetails(@PathVariable("eventId") Long eventId, Model model) {
+        // Fetch the event details using the event ID
+        EventModel event = eventService.getEventById(eventId);
+
+        // Check if the event exists
+        if (event == null) {
+            model.addAttribute("errorMessage", "Event not found.");
+            return "error"; // Render an error page or message if event not found
+        }
+
+        // Fetch ticket types for the event
+        List<TicketTypeModel> ticketTypes = ticketTypeService.getTicketTypesByEventId(eventId);
+
+        // Calculate price range
+        double minPrice = ticketTypes.stream()
+                .mapToDouble(TicketTypeModel::getPrice)
+                .min()
+                .orElse(0);
+        double maxPrice = ticketTypes.stream()
+                .mapToDouble(TicketTypeModel::getPrice)
+                .max()
+                .orElse(0);
+
+        // Add attributes to the model
+        model.addAttribute("event", event);
+        model.addAttribute("ticketTypes", ticketTypes);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
+
+        return "event-details"; // Returns the name of the Thymeleaf template for event details
     }
 }

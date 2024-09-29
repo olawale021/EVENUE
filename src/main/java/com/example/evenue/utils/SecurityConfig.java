@@ -40,11 +40,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-<<<<<<< HEAD
-                        .requestMatchers("/","/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
-=======
                         .requestMatchers("/", "/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
->>>>>>> cb50d73 (added browse-events fragment in index.html)
                         .requestMatchers("/organizer/**").hasRole("ORGANIZER")
                         .requestMatchers("/users/dashboard").hasRole("ATTENDEE")
                         .anyRequest().authenticated()

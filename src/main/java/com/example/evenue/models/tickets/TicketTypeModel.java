@@ -1,6 +1,5 @@
 package com.example.evenue.models.tickets;
 
-
 import com.example.evenue.models.events.EventModel;
 import jakarta.persistence.*;
 
@@ -11,14 +10,15 @@ public class TicketTypeModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_type_id")
-    private Long id;
+    private Long ticketTypeId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
     private EventModel event;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type_name", nullable = false)
-    private String typeName;
+    private TicketTypeName typeName; // Use an enum for ticket types like VIP, General Admission, etc.
 
     @Column(name = "description")
     private String description;
@@ -26,14 +26,20 @@ public class TicketTypeModel {
     @Column(name = "price", nullable = false)
     private Double price;
 
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity; // Total number of tickets available for this type
+
+    @Column(name = "remaining_quantity", nullable = false)
+    private Integer remainingQuantity; // Number of tickets still available
+
     // Getters and Setters
 
-    public Long getId() {
-        return id;
+    public Long getTicketTypeId() {
+        return ticketTypeId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setTicketTypeId(Long ticketTypeId) {
+        this.ticketTypeId = ticketTypeId;
     }
 
     public EventModel getEvent() {
@@ -44,11 +50,11 @@ public class TicketTypeModel {
         this.event = event;
     }
 
-    public String getTypeName() {
+    public TicketTypeName getTypeName() {
         return typeName;
     }
 
-    public void setTypeName(String typeName) {
+    public void setTypeName(TicketTypeName typeName) {
         this.typeName = typeName;
     }
 
@@ -66,5 +72,21 @@ public class TicketTypeModel {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public Integer getRemainingQuantity() {
+        return remainingQuantity;
+    }
+
+    public void setRemainingQuantity(Integer remainingQuantity) {
+        this.remainingQuantity = remainingQuantity;
     }
 }

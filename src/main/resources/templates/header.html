@@ -1,14 +1,14 @@
 <!-- header.html -->
 <div th:fragment="headerFragment">
-    <header class="bg-white shadow-md">
+    <header class="bg-white shadow-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-3">
             <div class="flex justify-between items-center">
                 <div class="text-2xl font-bold text-purple-800">
-                    <a href="#">EVENUE</a>
+                    <a href="/">EVENUE</a>
                 </div>
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="#" class="text-gray-800 hover:text-purple-600">Find Events</a>
-                    <a href="#" class="text-gray-800 hover:text-purple-600">Create Events</a>
+                    <a href="/events/browse" class="text-gray-800 hover:text-purple-600">Find Events</a>
+                    <a href="/events/create" class="text-gray-800 hover:text-purple-600">Create Events</a>
                     <a href="#" class="text-gray-800 hover:text-purple-600">About</a>
                     <a href="#" class="text-gray-800 hover:text-purple-600">Contact Us</a>
                 </div>
@@ -23,7 +23,14 @@
                         </button>
                         <!-- Dropdown Menu -->
                         <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                            <a href="/users/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Dashboard</a>
+                            <!-- Dashboard Link for ORGANIZER Role -->
+                            <a th:if="${#arrays.contains(#authentication.authorities.![authority], 'ROLE_ORGANIZER')}"
+                               href="/organizer/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                Dashboard
+                            </a>
+
+                            <!-- Browse Events Link -->
+                            <a href="/events/browse" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Browse Events</a>
 
                             <!-- Logout Form for POST request -->
                             <form action="/users/logout" method="POST" class="block">
@@ -32,7 +39,6 @@
                                     Logout
                                 </button>
                             </form>
-
                         </div>
 
                     </div>
@@ -44,6 +50,7 @@
             </div>
         </nav>
     </header>
+
     <th:block th:if="${#authentication?.isAuthenticated()} and !${#authentication.name.equals('anonymousUser')}">
         <script th:inline="javascript">
             document.addEventListener('DOMContentLoaded', function() {
@@ -67,4 +74,3 @@
         </script>
     </th:block>
 </div>
-

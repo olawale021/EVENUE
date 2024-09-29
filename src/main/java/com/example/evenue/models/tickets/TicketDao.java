@@ -4,6 +4,8 @@ package com.example.evenue.models.tickets;
 
 import com.example.evenue.models.tickets.TicketModel;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,5 +19,7 @@ public interface TicketDao extends JpaRepository<TicketModel, Long> {
 
     List<TicketModel> findByUserId(int user_id);
 
-    List<TicketModel> findByEventIdAndTicketTypeId(Long eventId, Long ticketTypeId);
+    @Query("SELECT t FROM TicketModel t WHERE t.event.id = :eventId AND t.ticketType.ticketTypeId = :ticketTypeId")
+    List<TicketModel> findByEventIdAndTicketTypeId(@Param("eventId") Long eventId, @Param("ticketTypeId") Long ticketTypeId);
+
 }
