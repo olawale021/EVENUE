@@ -101,7 +101,7 @@ public class UserController {
 
 
     // Serve the dashboard page
-    @GetMapping("/dashboard")
+    @GetMapping("/attendee/dashboard")
     public String showDashboard(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -4,10 +4,14 @@ package com.example.evenue.controller.tickets;
 import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.tickets.TicketModel;
 import com.example.evenue.models.tickets.TicketTypeModel;
+import com.example.evenue.models.users.UserModel;
 import com.example.evenue.service.EventService;
 import com.example.evenue.service.TicketService;
 import com.example.evenue.service.TicketTypeService;
+import com.example.evenue.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +29,9 @@ public class TicketController {
 
     @Autowired
     private TicketTypeService ticketTypeService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private EventService eventService;
@@ -98,47 +105,95 @@ public class TicketController {
     }
 
     // Endpoint to show form for creating a ticket for a specific ticket type
-    @GetMapping("/create/{ticketTypeId}")
-    public String showCreateTicketForm(@PathVariable Long ticketTypeId, Model model) {
+    @GetMapping("/buy/{ticketTypeId}")
+    public String showCreateTicketForm(@PathVariable Long ticketTypeId,
+                                       @RequestParam("quantity") Integer quantity,
+                                       Model model) {
         TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
-        if (ticketType == null || ticketType.getRemainingQuantity() <= 0) {
-            model.addAttribute("error", "Invalid or sold out ticket type");
+        if (ticketType == null) {
+            model.addAttribute("error", "Invalid ticket type.");
             return "error";
         }
 
+        if (ticketType.getRemainingQuantity() <= 0) {
+            model.addAttribute("error", "This ticket type is sold out.");
+            return "error";
+        }
+
+        if (quantity <= 0 || quantity > ticketType.getRemainingQuantity()) {
+            model.addAttribute("error", "Please select a valid quantity.");
+            return "redirect:/events/details/" + ticketType.getEvent().getId();
+        }
+
         model.addAttribute("ticketType", ticketType);
-        model.addAttribute("ticket", new TicketModel());
-        return "create-ticket";
+        model.addAttribute("quantity", quantity);
+        return "confirm-ticket-purchase";
     }
 
+
     // Endpoint to handle the creation of a ticket
-    @PostMapping("/create")
-    public String createTicket(@ModelAttribute("ticket") TicketModel ticket, Model model) {
-        // Validate and save the ticket
-        if (ticket.getUser() == null || ticket.getEvent() == null || ticket.getTicketType() == null) {
-            model.addAttribute("error", "Invalid input");
-            return "create-ticket";
+    @PostMapping("/buy")
+    public String createTicket(
+            @RequestParam("ticketTypeId") Long ticketTypeId,
+            @RequestParam("eventId") Long eventId,
+            @RequestParam("quantity") Integer quantity,
+            Model model) {
+
+        // Retrieve the currently authenticated user from Spring Security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        UserModel user = userService.findUserByEmail(userEmail);
+
+        if (user == null) {
+            model.addAttribute("error", "User not authenticated.");
+            return "confirm-ticket-purchase";
         }
 
-        TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticket.getTicketType().getTicketTypeId());
-        if (ticketType.getRemainingQuantity() <= 0) {
-            model.addAttribute("error", "No tickets available for this type");
-            return "create-ticket";
+        // Retrieve event and ticket type
+        EventModel event = eventService.getEventById(eventId);
+        TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
+
+        if (event == null || ticketType == null) {
+            model.addAttribute("error", "Invalid event or ticket type.");
+            return "confirm-ticket-purchase";
         }
 
+        if (ticketType.getRemainingQuantity() < quantity) {
+            model.addAttribute("error", "Not enough tickets available for this type.");
+            return "confirm-ticket-purchase";
+        }
+
+        // Create and populate the ticket
+        TicketModel ticket = new TicketModel();
+        ticket.setUser(user);
+        ticket.setEvent(event);
+        ticket.setTicketType(ticketType);
+        ticket.setQuantity(quantity);
+        ticket.setPrice(ticketType.getPrice() * quantity);
         ticket.setTicketCode(generateTicketCode());
         ticket.setPurchaseDate(LocalDateTime.now());
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
+
+        // Save the ticket
         ticketService.saveTicket(ticket);
 
         // Update remaining quantity in ticket type
-        ticketType.setRemainingQuantity(ticketType.getRemainingQuantity() - 1);
+        ticketType.setRemainingQuantity(ticketType.getRemainingQuantity() - quantity);
         ticketTypeService.saveTicketType(ticketType);
 
-        model.addAttribute("message", "Ticket created successfully!");
-        return "redirect:/tickets/types/" + ticket.getEvent().getId();
+        // Redirect to success page and pass the ticket code
+        return "redirect:/tickets/success?ticketCode=" + ticket.getTicketCode();
     }
+
+
+    @GetMapping("/success")
+    public String showPurchaseSuccess(@RequestParam("ticketCode") String ticketCode, Model model) {
+        model.addAttribute("ticketCode", ticketCode);
+        return "purchase-success";
+    }
+
+
 
     // Helper method to generate a unique ticket code
     private String generateTicketCode() {

@@ -1,9 +1,9 @@
 package com.example.evenue.models.tickets;
 
-
 import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.users.UserModel;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +35,9 @@ public class TicketModel {
 
     @Column(name = "price", nullable = false)
     private Double price;
+
+    @Column(name = "quantity", nullable = false) // New field for quantity
+    private Integer quantity;
 
     @Column(name = "is_valid", nullable = false)
     private Boolean isValid = true;
@@ -107,6 +110,14 @@ public class TicketModel {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public Boolean getIsValid() {

@@ -4,6 +4,10 @@
   <title>Select User Role</title>
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+
+<!-- Header Section -->
+<div th:insert="~{header :: headerFragment}"></div>
+
 <div style="max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
   <h2 style="text-align: center;">Select Your Role</h2>
 
@@ -31,5 +35,8 @@
 
   <p style="text-align: center;">If you need to go back, <a th:href="@{/users/login}">click here to login</a>.</p>
 </div>
+
+<!-- Footer Section -->
+<div th:insert="footer :: footer"></div>
 </body>
 </html>

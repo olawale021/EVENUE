@@ -140,6 +140,9 @@ public class EventController {
         // Fetch the event details using the event ID
         EventModel event = eventService.getEventById(eventId);
 
+        // Fetch all events from the database
+        List<EventModel> events = eventService.getAllEvents();
+
         // Check if the event exists
         if (event == null) {
             model.addAttribute("errorMessage", "Event not found.");
@@ -160,6 +163,7 @@ public class EventController {
                 .orElse(0);
 
         // Add attributes to the model
+        model.addAttribute("events", events);
         model.addAttribute("event", event);
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("minPrice", minPrice);
