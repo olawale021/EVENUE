@@ -2,10 +2,12 @@ package com.example.evenue.service;
 
 import com.example.evenue.models.tickets.TicketTypeDao;
 import com.example.evenue.models.tickets.TicketTypeModel;
+import com.example.evenue.models.tickets.TicketTypeName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TicketTypeService {
@@ -28,10 +30,16 @@ public class TicketTypeService {
         return ticketTypeDao.findByEventId(eventId);
     }
 
+
+
     // Method to delete a ticket type by its ID
     public void deleteTicketTypeById(Long ticketTypeId) {
         ticketTypeDao.deleteById(ticketTypeId);
     }
 
-    // Additional methods for managing ticket types can be added here as needed
+    // Method to find ticket type by event ID and type name
+    public TicketTypeModel findTicketTypeByEventIdAndType(Long eventId, TicketTypeName typeName) {
+        Optional<TicketTypeModel> ticketType = ticketTypeDao.findByEventIdAndTypeName(eventId, typeName);
+        return ticketType.orElse(null);
+    }
 }

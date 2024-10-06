@@ -200,5 +200,51 @@ public class TicketController {
         return UUID.randomUUID().toString();
     }
 
-    // Add other ticket and ticket type management endpoints as needed
+    /**
+     * Endpoint to verify a ticket based on its ticket code.
+     *
+     * @param //ticketCode The unique code of the ticket to be verified.
+     * @param model The model to pass data to the view.
+     * @return The verification result page.
+     */
+    @GetMapping("/verify")
+    public String showVerifyTicketForm(Model model) {
+        // Add an empty attribute to bind with the form
+        model.addAttribute("ticketCode", "");
+        return "ticket-verification-form";  // Return the form view
+    }
+
+    @PostMapping("/verify")
+    public String verifyTicket(@RequestParam("ticketCode") String ticketCode, Model model) {
+        // Retrieve the ticket by the ticketCode
+        TicketModel ticket = ticketService.getTicketByTicketCode(ticketCode);
+
+        if (ticket == null) {
+            model.addAttribute("error", "Ticket not found or invalid ticket code.");
+            return "ticket-verification-error";  // Error page if the ticket is invalid
+        }
+
+        // Check if the ticket has already been scanned
+        if (ticket.getIsScanned()) {
+            model.addAttribute("error", "This ticket has already been scanned.");
+            return "ticket-verification-error";  // Error page if the ticket is already scanned
+        }
+
+        // Mark the ticket as scanned and update the scanned time
+        ticket.setIsScanned(true);
+        ticket.setScannedAt(LocalDateTime.now());
+        ticketService.saveTicket(ticket);
+
+        // Retrieve the user email and event details
+        UserModel user = ticket.getUser();
+        EventModel event = ticket.getEvent();
+
+        // Pass the ticket and additional details to the model for the success page
+        model.addAttribute("ticket", ticket);
+        model.addAttribute("userEmail", user.getEmail());
+        model.addAttribute("eventName", event.getEventName());
+        return "ticket-verification-success";  // Success page for valid ticket
+    }
+
+
 }

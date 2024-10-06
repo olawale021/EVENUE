@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EventDao extends JpaRepository<EventModel, Long> {
@@ -26,4 +27,8 @@ public interface EventDao extends JpaRepository<EventModel, Long> {
 
     // Method to find events by organizer ID
     List<EventModel> findByOrganizerId(Integer organizerId);
+
+//    Optional<EventModel> findByEventName(String eventName);
+
+    Optional<EventModel> findByEventName(String eventName);
 }

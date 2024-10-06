@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EventService {
@@ -45,5 +46,10 @@ public class EventService {
         else {
             return eventDao.findBySearch(search, sort);
         }
+    }
+
+    // Method to find an event by name
+    public EventModel findByEventName(String eventName) {
+        return eventDao.findByEventName(eventName).orElse(null); // Use Optional to avoid returning null
     }
 }

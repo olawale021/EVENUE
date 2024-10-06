@@ -13,11 +13,14 @@ import java.util.Optional;
 
 @Repository
 public interface TicketDao extends JpaRepository<TicketModel, Long> {
-    Optional<TicketModel> findByTicketCode(String ticketCode);
+
 
     List<TicketModel> findByEventId(Long eventId);
 
+    TicketModel findByTicketCode(String ticketCode);
+
     List<TicketModel> findByUserId(int user_id);
+
 
     @Query("SELECT t FROM TicketModel t WHERE t.event.id = :eventId AND t.ticketType.ticketTypeId = :ticketTypeId")
     List<TicketModel> findByEventIdAndTicketTypeId(@Param("eventId") Long eventId, @Param("ticketTypeId") Long ticketTypeId);

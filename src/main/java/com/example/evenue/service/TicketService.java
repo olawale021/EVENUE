@@ -38,5 +38,11 @@ public class TicketService {
         ticketDao.deleteById(ticketId);
     }
 
-    // Additional methods for managing tickets can be added here as needed
+    // Method to get ticket by ticketCode
+    public TicketModel getTicketByTicketCode(String ticketCode) {
+        return ticketDao.findByTicketCode(ticketCode);
+    }
+
+
+
 }

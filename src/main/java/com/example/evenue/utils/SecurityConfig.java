@@ -43,7 +43,11 @@ public class SecurityConfig {
                         .requestMatchers("/", "/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/organizer/**").hasRole("ORGANIZER")
                         .requestMatchers("/users/dashboard").hasRole("ATTENDEE")
+                        .requestMatchers("/webhook").permitAll()  // Permitting all access to chatbot endpoint
                         .anyRequest().authenticated()
+                )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/webhook")  // Disabling CSRF for chatbot webhook
                 )
                 .formLogin(form -> form
                         .loginPage("/users/login")
@@ -90,10 +94,6 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .userDetailsService(userDetailsService);
-
-        // Enable CSRF protection for all routes by default.
-        // Uncomment the following line if you want to disable CSRF protection (not recommended for production).
-        // http.csrf().disable();
 
         return http.build();
     }
