@@ -1,9 +1,11 @@
 package com.example.evenue.controller.chatbot;
 
 import com.example.evenue.models.events.EventModel;
+import com.example.evenue.models.tickets.TicketModel;
 import com.example.evenue.models.tickets.TicketTypeModel;
 import com.example.evenue.models.users.UserModel;
 import com.example.evenue.service.EventService;
+import com.example.evenue.service.TicketService;
 import com.example.evenue.service.TicketTypeService;
 import com.example.evenue.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,9 @@ public class DialogflowWebhookController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private TicketService ticketService;
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> handleDialogflowWebhook(@RequestBody Map<String, Object> request) {
@@ -42,6 +48,8 @@ public class DialogflowWebhookController {
                 return handleCollectEventIntent(queryResult, request);
             case "CollectTicketTypeIntent":
                 return handleCollectTicketTypeIntent(queryResult, request);
+                case "ConfirmBookingIntent":
+                    return handleConfirmBookingIntent(queryResult, request);
             default:
                 return handleFallbackIntent();
         }
@@ -167,7 +175,7 @@ public class DialogflowWebhookController {
             return ResponseEntity.ok(fulfillmentResponse);
         }
 
-        // Retrieve previous session parameters (event_id)
+        // Retrieve previous session parameters (event_id, event_name, and email)
         List<Map<String, Object>> outputContexts = (List<Map<String, Object>>) queryResult.get("outputContexts");
         Map<String, Object> sessionParameters = outputContexts.stream()
                 .filter(context -> ((String) context.get("name")).endsWith("/contexts/awaiting_ticket_type"))
@@ -175,7 +183,6 @@ public class DialogflowWebhookController {
                 .map(context -> new HashMap<>((Map<String, Object>) context.get("parameters"))) // Copy to a new map
                 .orElse(new HashMap<>());
 
-        // Retrieve event_id safely (check if it's a Double and convert to Long)
         Object eventIdObj = sessionParameters.get("event_id");
         Long eventId = null;
         if (eventIdObj instanceof Double) {
@@ -184,9 +191,27 @@ public class DialogflowWebhookController {
             eventId = (Long) eventIdObj;
         }
 
-        if (eventId == null) {
+        // Get event name from sessionParameters or from EventModel
+        String eventName = (String) sessionParameters.get("event_name");
+
+        if (eventId == null || eventName == null) {
             Map<String, Object> fulfillmentResponse = new HashMap<>();
-            fulfillmentResponse.put("fulfillmentText", "Event ID is missing. Please try again.");
+            fulfillmentResponse.put("fulfillmentText", "Event ID or event name is missing. Please try again.");
+            return ResponseEntity.ok(fulfillmentResponse);
+        }
+
+        // Check if the email is available, otherwise ask the user to provide it
+        String userEmail = (String) sessionParameters.get("email");
+        if (userEmail == null || userEmail.isEmpty()) {
+            Map<String, Object> fulfillmentResponse = new HashMap<>();
+            fulfillmentResponse.put("fulfillmentText", "Please provide your email to assign the ticket.");
+            fulfillmentResponse.put("outputContexts", List.of(
+                    Map.of(
+                            "name", request.get("session") + "/contexts/awaiting_email",
+                            "lifespanCount", 5,
+                            "parameters", sessionParameters // Now using the copy of sessionParameters
+                    )
+            ));
             return ResponseEntity.ok(fulfillmentResponse);
         }
 
@@ -207,14 +232,16 @@ public class DialogflowWebhookController {
             return ResponseEntity.ok(fulfillmentResponse);
         }
 
-        // Save the selected ticket type and quantity in the session
+        // Save the selected ticket type, quantity, and email in the session
         sessionParameters.put("ticket_type_id", selectedTicketType.getTicketTypeId());
         sessionParameters.put("ticket_type_name", selectedTicketType.getTypeName().name());  // Store the enum's name
         sessionParameters.put("ticket_price", selectedTicketType.getPrice());
         sessionParameters.put("quantity", quantity);
 
-        // Respond with a confirmation message
-        String confirmationMessage = "You selected " + quantity + " " + selectedTicketType.getTypeName().name() + " tickets priced at $" + selectedTicketType.getPrice() + " each.";
+        // Respond with a confirmation message including the event name and email
+        String confirmationMessage = "You selected " + quantity + " " + selectedTicketType.getTypeName().name() +
+                " tickets for the event '" + eventName + "', priced at $" + selectedTicketType.getPrice() + " each. " +
+                "The tickets will be assigned to " + userEmail + ".";
         Map<String, Object> fulfillmentResponse = new HashMap<>();
         fulfillmentResponse.put("fulfillmentText", confirmationMessage + " Would you like to confirm the booking?");
         fulfillmentResponse.put("outputContexts", List.of(
@@ -229,6 +256,94 @@ public class DialogflowWebhookController {
     }
 
 
+    private ResponseEntity<Map<String, Object>> handleConfirmBookingIntent(Map<String, Object> queryResult, Map<String, Object> request) {
+        // Retrieve session parameters (event_id, ticket_type, quantity, etc.)
+        List<Map<String, Object>> outputContexts = (List<Map<String, Object>>) queryResult.get("outputContexts");
+        Map<String, Object> sessionParameters = outputContexts.stream()
+                .filter(context -> ((String) context.get("name")).endsWith("/contexts/awaiting_confirmation"))
+                .findFirst()
+                .map(context -> (Map<String, Object>) context.get("parameters"))
+                .orElse(new HashMap<>());
+
+        // Handle eventId safely
+        Object eventIdObj = sessionParameters.get("event_id");
+        Long eventId = null;
+        if (eventIdObj instanceof Double) {
+            eventId = ((Double) eventIdObj).longValue();  // Convert Double to Long
+        } else if (eventIdObj instanceof Long) {
+            eventId = (Long) eventIdObj;
+        }
+
+        // Handle ticketTypeId safely
+        Object ticketTypeIdObj = sessionParameters.get("ticket_type_id");
+        Long ticketTypeId = null;
+        if (ticketTypeIdObj instanceof Double) {
+            ticketTypeId = ((Double) ticketTypeIdObj).longValue();  // Convert Double to Long
+        } else if (ticketTypeIdObj instanceof Long) {
+            ticketTypeId = (Long) ticketTypeIdObj;
+        }
+
+        // Handle quantity safely
+        Object quantityObj = sessionParameters.get("quantity");
+        Integer quantity = null;
+        if (quantityObj instanceof Double) {
+            quantity = ((Double) quantityObj).intValue();  // Convert Double to Integer
+        } else if (quantityObj instanceof Integer) {
+            quantity = (Integer) quantityObj;
+        }
+
+        String userEmail = (String) sessionParameters.get("email");  // Assuming you collected the user's email previously
+
+        if (eventId == null || ticketTypeId == null || quantity == null || userEmail == null) {
+            Map<String, Object> fulfillmentResponse = new HashMap<>();
+            fulfillmentResponse.put("fulfillmentText", "Unable to process your booking. Some information is missing.");
+            return ResponseEntity.ok(fulfillmentResponse);
+        }
+
+        // Proceed with creating the booking (storing in the database)
+        try {
+            UserModel user = userService.findUserByEmail(userEmail);
+            EventModel event = eventService.getEventById(eventId);
+            TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
+
+            // Create the ticket booking entry in the database
+            TicketModel ticket = new TicketModel();
+            ticket.setUser(user);
+            ticket.setEvent(event);
+            ticket.setTicketType(ticketType);
+            ticket.setQuantity(quantity);
+            ticket.setPrice(ticketType.getPrice() * quantity);  // Calculate total price
+            ticket.setPurchaseDate(LocalDateTime.now());
+
+            // Set createdAt and updatedAt timestamps
+            ticket.setCreatedAt(LocalDateTime.now());
+            ticket.setUpdatedAt(LocalDateTime.now());
+
+            // Generate a unique ticket code
+            ticket.generateTicketCode();
+
+            // Save the ticket booking
+            ticketService.saveTicket(ticket);
+
+            // Respond with a confirmation message, including the ticket code
+            String confirmationMessage = "Your booking for " + quantity + " " + ticketType.getTypeName().name() +
+                    " tickets to the event '" + event.getEventName() + "' has been confirmed. Your ticket code is: " + ticket.getTicketCode() +
+                    ". Total cost: $" + ticket.getPrice() + ".";
+            Map<String, Object> fulfillmentResponse = new HashMap<>();
+            fulfillmentResponse.put("fulfillmentText", confirmationMessage);
+            return ResponseEntity.ok(fulfillmentResponse);
+
+        } catch (Exception e) {
+            // Log the error message and stack trace for troubleshooting
+            System.out.println("Error during booking: " + e.getMessage());
+            e.printStackTrace();  // Print the error details for easier debugging
+
+            // Handle any errors during the booking process
+            Map<String, Object> fulfillmentResponse = new HashMap<>();
+            fulfillmentResponse.put("fulfillmentText", "An error occurred while processing your booking. Please try again.");
+            return ResponseEntity.ok(fulfillmentResponse);
+        }
+    }
 
 
     private ResponseEntity<Map<String, Object>> handleFallbackIntent() {

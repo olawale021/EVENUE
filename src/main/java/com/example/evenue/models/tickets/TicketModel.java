@@ -5,6 +5,7 @@ import com.example.evenue.models.users.UserModel;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "tickets")
@@ -36,7 +37,7 @@ public class TicketModel {
     @Column(name = "price", nullable = false)
     private Double price;
 
-    @Column(name = "quantity", nullable = false) // New field for quantity
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "is_valid", nullable = false)
@@ -48,14 +49,13 @@ public class TicketModel {
     @Column(name = "scanned_at")
     private LocalDateTime scannedAt;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     // Getters and Setters
-
     public Long getId() {
         return id;
     }
@@ -159,4 +159,22 @@ public class TicketModel {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public void generateTicketCode() {
+        this.ticketCode = UUID.randomUUID().toString(); // Generate a unique ticket code
+    }
+
+    // JPA lifecycle callbacks
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now(); // Set creation date before saving
+        this.updatedAt = LocalDateTime.now(); // Also set updatedAt for consistency
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(); // Update timestamp on every save
+    }
 }
+
