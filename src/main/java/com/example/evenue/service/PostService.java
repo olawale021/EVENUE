@@ -40,13 +40,14 @@ public class PostService {
      * @param images    A list of optional images to be converted to Base64.
      * @return          The created post with Base64-encoded images.
      */
-    public PostModel createPost(String content, Long eventId, UserModel user, List<MultipartFile> images) {
+    public PostModel createPost(String title, String content, Long eventId, UserModel user, List<MultipartFile> images) {
         // Step 1: Retrieve the EventModel by eventId
         EventModel event = eventDao.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
         // Step 2: Create and save the post
         PostModel post = new PostModel();
+        post.setTitle(title);
         post.setContent(content);
         post.setEvent(event);  // Set the EventModel object instead of eventId
         post.setUser(user);
@@ -149,6 +150,7 @@ public class PostService {
             EventResponse eventResponse = new EventResponse();
             eventResponse.setId(post.getEvent().getId());
             eventResponse.setEventName(post.getEvent().getEventName());
+
             eventResponse.setLocation(post.getEvent().getLocation());
             eventResponse.setDate(post.getEvent().getEventDate().atTime(post.getEvent().getStartTime())); // Combine date and time
             eventResponse.setDescription(post.getEvent().getDescription());
@@ -177,6 +179,7 @@ public class PostService {
         for (PostModel post : posts) {
             PostResponse postResponse = new PostResponse();
             postResponse.setId(post.getId());
+            postResponse.setTitle(post.getTitle());
             postResponse.setContent(post.getContent());
             postResponse.setCreatedAt(post.getCreatedAt());
 

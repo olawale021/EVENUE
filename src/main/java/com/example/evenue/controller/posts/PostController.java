@@ -58,6 +58,7 @@ public class PostController {
      */
     @PostMapping("/create")
     public String createPost(
+            @RequestParam String title,
             @RequestParam String content,
             @RequestParam Long eventId,
             @RequestParam("images") List<MultipartFile> images) {
@@ -66,7 +67,7 @@ public class PostController {
         String email = authentication.getName();
         UserModel user = userService.findUserByEmail(email);
 
-        postService.createPost(content, eventId, user, images);
+        postService.createPost(title, content, eventId, user, images);
 
         return "redirect:/posts"; // Redirect to the posts list page after creation
     }
