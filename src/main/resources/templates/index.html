@@ -60,6 +60,27 @@
             margin: 0 auto;
             padding: 0 20px;
         }
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .chatbot-toggle {
+            background-color: #6b21a8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .chatbot-frame {
+            display: none;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -204,10 +225,33 @@
         </div>
     </section>
 
+    <!-- Chatbot Section -->
+    <div class="chatbot-container">
+        <button class="chatbot-toggle" onclick="toggleChatbot()">Chat with Us</button>
+        <iframe class="chatbot-frame" width="350" height="430" allow="microphone;" src="https://console.dialogflow.com/api-client/demo/embedded/313cfe32-f0f5-48f9-9df4-f03189b9c7b4"></iframe>
+    </div>
+
 </main>
+
+
 
 <!-- Footer Section -->
 <div th:insert="footer :: footer"></div>
 
 </body>
+
+<script>
+    function toggleChatbot() {
+        var chatbotFrame = document.querySelector('.chatbot-frame');
+        var chatbotToggle = document.querySelector('.chatbot-toggle');
+        if (chatbotFrame.style.display === 'none') {
+            chatbotFrame.style.display = 'block';
+            chatbotToggle.textContent = 'Close Chat';
+        } else {
+            chatbotFrame.style.display = 'none';
+            chatbotToggle.textContent = 'Chat with Us';
+        }
+    }
+</script>
+
 </html>

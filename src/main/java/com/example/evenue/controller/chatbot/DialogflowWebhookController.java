@@ -292,19 +292,38 @@ public class DialogflowWebhookController {
             quantity = (Integer) quantityObj;
         }
 
-        String userEmail = (String) sessionParameters.get("email");  // Assuming you collected the user's email previously
+        String userEmail = (String) sessionParameters.get("email");
 
+        // Validate essential data
         if (eventId == null || ticketTypeId == null || quantity == null || userEmail == null) {
             Map<String, Object> fulfillmentResponse = new HashMap<>();
             fulfillmentResponse.put("fulfillmentText", "Unable to process your booking. Some information is missing.");
             return ResponseEntity.ok(fulfillmentResponse);
         }
 
-        // Proceed with creating the booking (storing in the database)
         try {
+            // Fetch the user by email
             UserModel user = userService.findUserByEmail(userEmail);
+            if (user == null) {
+                Map<String, Object> fulfillmentResponse = new HashMap<>();
+                fulfillmentResponse.put("fulfillmentText", "User not found. Please provide a valid email.");
+                return ResponseEntity.ok(fulfillmentResponse);
+            }
+
+            // Fetch the event and ticket type
             EventModel event = eventService.getEventById(eventId);
+            if (event == null) {
+                Map<String, Object> fulfillmentResponse = new HashMap<>();
+                fulfillmentResponse.put("fulfillmentText", "Event not found. Please provide a valid event.");
+                return ResponseEntity.ok(fulfillmentResponse);
+            }
+
             TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
+            if (ticketType == null) {
+                Map<String, Object> fulfillmentResponse = new HashMap<>();
+                fulfillmentResponse.put("fulfillmentText", "Ticket type not found. Please provide a valid ticket type.");
+                return ResponseEntity.ok(fulfillmentResponse);
+            }
 
             // Create the ticket booking entry in the database
             TicketModel ticket = new TicketModel();
@@ -336,7 +355,7 @@ public class DialogflowWebhookController {
         } catch (Exception e) {
             // Log the error message and stack trace for troubleshooting
             System.out.println("Error during booking: " + e.getMessage());
-            e.printStackTrace();  // Print the error details for easier debugging
+            e.printStackTrace();
 
             // Handle any errors during the booking process
             Map<String, Object> fulfillmentResponse = new HashMap<>();
@@ -344,6 +363,7 @@ public class DialogflowWebhookController {
             return ResponseEntity.ok(fulfillmentResponse);
         }
     }
+
 
 
     private ResponseEntity<Map<String, Object>> handleFallbackIntent() {

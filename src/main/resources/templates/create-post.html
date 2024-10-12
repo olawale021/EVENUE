@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Post</title>
+</head>
+<body>
+<h2>Create a New Post</h2>
+
+<form th:action="@{/posts/create}" method="post" enctype="multipart/form-data">
+    <label for="content">Content:</label>
+    <textarea id="content" name="content" required></textarea><br>
+
+    <label for="eventId">Event:</label>
+    <select id="eventId" name="eventId" required>
+        <option value="" disabled selected>Select an event</option>
+        <option th:each="event : ${events}" th:value="${event.id}" th:text="${event.eventName}"></option>
+    </select><br>
+
+    <label for="images">Upload Images:</label>
+    <input type="file" id="images" name="images" multiple><br>
+
+    <button type="submit">Submit</button>
+</form>
+
+<a th:href="@{/posts}">Back to Posts</a>
+</body>
+</html>

@@ -9,7 +9,10 @@ public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Integer id;
+
+    @Column(name = "username")
+    private String userName;
 
     @Column(name = "first_name")
     private String firstName;
@@ -64,11 +67,18 @@ public class UserModel {
     private String updatedAt;
 
     // Getters and Setters
-    public int getId() {
+    public Integer getId() {
         return id;
     }
+    public String getUserName() {
+        return userName;
+    }
 
-    public void setId(int id) {
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setId(Integer id) {
         this.id = id;
     }
 

@@ -1,10 +1,10 @@
 package com.example.evenue.models.events;
 
-import com.example.evenue.models.events.EventCategory;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.chrono.ChronoLocalDate;
 
 @Entity
 @Table(name = "events")
@@ -54,6 +54,11 @@ public class EventModel {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     private EventCategory eventCategory; // Reference to EventCategory entity
+
+    // Check if the event is upcoming
+    public boolean isUpcoming() {
+        return eventDate.isAfter(ChronoLocalDate.from(LocalDateTime.now()));
+    }
 
     // Constructors
     public EventModel() {}

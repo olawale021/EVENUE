@@ -1,6 +1,10 @@
 package com.example.evenue.controller.user;
 
+import com.example.evenue.models.events.EventModel;
+import com.example.evenue.models.tickets.TicketModel;
 import com.example.evenue.models.users.UserModel;
+import com.example.evenue.service.EventService;
+import com.example.evenue.service.TicketService;
 import com.example.evenue.service.UserService;
 import com.example.evenue.models.users.Role;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +18,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/users")
@@ -30,6 +37,14 @@ public class UserController {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @Autowired
+    private TicketService ticketService;
+
+
+    @Autowired
+    private EventService eventService;
+
 
     // Serve the registration page
     @GetMapping("/register")
@@ -111,12 +126,16 @@ public class UserController {
         String email = authentication.getName(); // This will be the email address
         UserModel user = userService.findUserByEmail(email); // Use userService
 
+        // Fetch the list of events to pass to the modal (for creating posts)
+        List<EventModel> events = eventService.getAllEvents();
+
         if (user == null) {
             // This shouldn't happen if the user is authenticated, but just in case
             return "redirect:/users/login";
         }
 
         model.addAttribute("user", user);
+        model.addAttribute("events", events);
         return "dashboard";
     }
 
@@ -174,4 +193,140 @@ public class UserController {
             return "redirect:/users/set-role?error=invalid_role";
         }
     }
+
+    // Serve the edit profile page
+    @GetMapping("/profile/edit")
+    public String showEditProfileForm(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/users/login";
+        }
+
+        String email = authentication.getName(); // Get the current user's email from authentication
+        UserModel user = userService.findUserByEmail(email);
+
+        if (user == null) {
+            return "redirect:/users/login";
+        }
+
+        model.addAttribute("user", user);
+        return "edit-profile"; // Serve edit-profile.html template
+    }
+    // Handle profile updates
+    @PostMapping("/profile/edit")
+    public String updateProfile(
+            @RequestParam String userName,
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam String addressLine1,
+            @RequestParam String city,
+            @RequestParam String state,
+            @RequestParam String postalCode,
+            @RequestParam String country,
+            @RequestParam String contactNumber,
+            Model model) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/users/login";
+        }
+
+        String currentEmail = authentication.getName(); // Current logged in user's email
+        UserModel user = userService.findUserByEmail(currentEmail);
+        if (user == null) {
+            return "redirect:/users/login";
+        }
+
+        // Update the user's profile fields
+        user.setUserName(userName);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setAddressLine1(addressLine1);  // Set individual address fields
+        user.setCity(city);
+        user.setState(state);
+        user.setPostalCode(postalCode);
+        user.setCountry(country);
+        user.setContactNumber(contactNumber);
+
+        userService.saveUser(user); // Save the updated user using the userService
+
+        // Update session and security context if the email was changed
+        if (!currentEmail.equals(email)) {
+            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(user.getEmail(), authentication.getCredentials(), authorities);
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+        }
+
+        model.addAttribute("user", user);
+        return "redirect:/users/profile/edit"; // Redirect to the profile page
+    }
+
+
+    // Serve the profile page
+    @GetMapping("/profile")
+    public String viewProfile(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/users/login";
+        }
+
+        String email = authentication.getName(); // Current user's email
+        UserModel user = userService.findUserByEmail(email);
+        model.addAttribute("user", user);
+
+        return "profile"; // Return profile.html template
+    }
+
+    // Serve the logged-in user's tickets page
+    @GetMapping("/tickets")
+    public String getUserTickets(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/users/login"; // If the user is not authenticated, redirect to login
+        }
+
+        String email = authentication.getName(); // Fetch the current user's email
+        UserModel user = userService.findUserByEmail(email);
+        if (user == null) {
+            return "redirect:/users/login"; // If user not found, redirect to login
+        }
+
+        // Fetch the user's tickets using the user ID
+        List<TicketModel> userTickets = ticketService.getTicketsByUserId(user.getId());
+        model.addAttribute("tickets", userTickets); // Add tickets to the model
+
+        return "user-tickets"; // Return the Thymeleaf template for displaying user tickets
+    }
+
+    // Serve the upcoming events for which the logged-in user has purchased tickets
+    @GetMapping("/upcoming-events")
+    public String getUserUpcomingEvents(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/users/login"; // If the user is not authenticated, redirect to login
+        }
+
+        String email = authentication.getName(); // Fetch the current user's email
+        UserModel user = userService.findUserByEmail(email);
+        if (user == null) {
+            return "redirect:/users/login"; // Redirect to login if user not found
+        }
+
+        // Fetch the user's tickets
+        List<TicketModel> userTickets = ticketService.getTicketsByUserId(user.getId());
+
+        // Extract the events from the tickets and filter for upcoming events
+        LocalDateTime now = LocalDateTime.now();
+        List<EventModel> upcomingEvents = userTickets.stream()
+                .map(TicketModel::getEvent) // Get the event associated with each ticket
+                .filter(event -> event.getEventDate().isAfter(ChronoLocalDate.from(now))) // Filter only future events
+                .distinct() // Ensure the same event is not added multiple times
+                .collect(Collectors.toList());
+
+        model.addAttribute("events", upcomingEvents); // Add events to the model
+        return "user-upcoming-events"; // Return the Thymeleaf template for displaying upcoming events
+    }
+
 }

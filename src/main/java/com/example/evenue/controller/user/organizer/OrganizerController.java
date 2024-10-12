@@ -59,7 +59,7 @@ public class OrganizerController {
         }
 
         // Fetch events created by this organizer
-        List<EventModel> events = eventDao.findByOrganizerId(organizer.getId());
+        List<EventModel> events = eventDao.findByOrganizerId(Long.valueOf(organizer.getId()));
 
         // Add attributes to the model
         model.addAttribute("events", events);

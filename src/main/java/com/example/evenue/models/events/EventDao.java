@@ -26,7 +26,7 @@ public interface EventDao extends JpaRepository<EventModel, Long> {
     List<EventModel> findBySearch(@Param("search") String search, Sort sort);
 
     // Method to find events by organizer ID
-    List<EventModel> findByOrganizerId(Integer organizerId);
+    List<EventModel> findByOrganizerId(Long organizerId);
 
 //    Optional<EventModel> findByEventName(String eventName);
 
