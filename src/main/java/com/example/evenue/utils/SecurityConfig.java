@@ -40,10 +40,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/users/register", "/users/login", "/users/set-role", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/users/register", "/users/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/organizer/**").hasRole("ORGANIZER")
                         .requestMatchers("/users/dashboard").hasRole("ATTENDEE")
-                        .requestMatchers("/webhook").permitAll()  // Permitting all access to chatbot endpoint
+                        .requestMatchers("/webhook").permitAll()  // Permitting access to webhook
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf
@@ -55,8 +55,7 @@ public class SecurityConfig {
                         .passwordParameter("password")
                         .successHandler(new AuthenticationSuccessHandler() {
                             @Override
-                            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                                                Authentication authentication) throws IOException, ServletException {
+                            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                                 String role = authentication.getAuthorities().stream()
                                         .map(GrantedAuthority::getAuthority)
                                         .findFirst()
@@ -78,9 +77,7 @@ public class SecurityConfig {
                         })
                         .failureHandler(new AuthenticationFailureHandler() {
                             @Override
-                            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                                                AuthenticationException exception) throws IOException {
-                                System.out.println("Authentication failed: " + exception.getMessage());
+                            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
                                 response.sendRedirect("/users/login?error=true");
                             }
                         })
@@ -89,8 +86,8 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/users/logout")
                         .logoutSuccessHandler((request, response, authentication) -> response.sendRedirect("/users/login"))
-                        .invalidateHttpSession(true)  // Invalidate the session
-                        .deleteCookies("JSESSIONID")  // Delete the session cookie
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
                 .userDetailsService(userDetailsService);

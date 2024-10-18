@@ -36,6 +36,9 @@
                             <!-- Browse Events Link -->
                             <a href="/events/browse" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Browse Events</a>
 
+
+                            <a href="/wishlist/user" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Wishlist</a>
+
                             <!-- Logout Form for POST request -->
                             <form action="/users/logout" method="POST" class="block">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

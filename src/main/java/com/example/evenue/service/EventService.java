@@ -24,8 +24,8 @@ public class EventService {
         return eventDao.findAll();
     }
 
-    public EventModel getEventById(Long eventId) {
-        return eventDao.findById(eventId).orElse(null);
+    public Optional<EventModel> getEventById(Long eventId) {
+        return eventDao.findById(eventId); // Use Optional here
     }
 
     // Implement filter logic
@@ -49,7 +49,8 @@ public class EventService {
     }
 
     // Method to find an event by name
-    public EventModel findByEventName(String eventName) {
-        return eventDao.findByEventName(eventName).orElse(null); // Use Optional to avoid returning null
+    // Method to find an event by name
+    public Optional<EventModel> findByEventName(String eventName) {
+        return eventDao.findByEventName(eventName); // Use Optional to avoid returning null
     }
 }

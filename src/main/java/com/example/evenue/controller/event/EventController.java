@@ -9,6 +9,7 @@ import com.example.evenue.models.users.UserModel;
 import com.example.evenue.service.EventService;
 import com.example.evenue.service.TicketTypeService;
 import com.example.evenue.service.UserService;
+import com.example.evenue.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/events")
@@ -37,6 +40,9 @@ public class EventController {
 
     @Autowired
     private TicketTypeService ticketTypeService;
+
+    @Autowired
+    private WishlistService wishlistService;
 
     // Endpoint to display the create event form
     @GetMapping("/create")
@@ -103,9 +109,20 @@ public class EventController {
 
     // Browse events - GET method to display events
     @GetMapping("/browse")
-    public String browseEvents(Model model) {
+    public String browseEvents(Model model, Authentication authentication) {
+        // Fetch the logged-in user
+        String userEmail = authentication.getName();  // This retrieves the email (or username)
+        UserModel loggedInUser = userService.findUserByEmail(userEmail);
+        model.addAttribute("loggedInUser", loggedInUser);
+
         // Fetch all events
         List<EventModel> events = eventService.getAllEvents();
+
+        // Set 'isLiked' flag for each event
+        for (EventModel event : events) {
+            boolean isLiked = wishlistService.isEventLikedByUser(loggedInUser, event);
+            event.setLiked(isLiked);  // Assuming EventModel has setIsLiked() method
+        }
         model.addAttribute("events", events);
 
         // Fetch all categories for filtering purposes
@@ -114,6 +131,8 @@ public class EventController {
 
         return "browse-events";
     }
+
+
 
     // Browse events - POST method to handle filtering of events
     @PostMapping("/browse")
@@ -134,20 +153,18 @@ public class EventController {
         return "browse-events"; // Return to the browse events page with filtered results
     }
 
-    // Endpoint to display event details
     @GetMapping("/details/{eventId}")
     public String eventDetails(@PathVariable("eventId") Long eventId, Model model) {
         // Fetch the event details using the event ID
-        EventModel event = eventService.getEventById(eventId);
-
-        // Fetch all events from the database
-        List<EventModel> events = eventService.getAllEvents();
+        Optional<EventModel> eventOptional = eventService.getEventById(eventId);
 
         // Check if the event exists
-        if (event == null) {
+        if (eventOptional.isEmpty()) {
             model.addAttribute("errorMessage", "Event not found.");
             return "error"; // Render an error page or message if event not found
         }
+
+        EventModel event = eventOptional.get(); // Unwrapping Optional to get EventModel
 
         // Fetch ticket types for the event
         List<TicketTypeModel> ticketTypes = ticketTypeService.getTicketTypesByEventId(eventId);
@@ -163,12 +180,12 @@ public class EventController {
                 .orElse(0);
 
         // Add attributes to the model
-        model.addAttribute("events", events);
-        model.addAttribute("event", event);
+        model.addAttribute("event", event); // Pass the unwrapped EventModel to the view
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
 
         return "event-details"; // Returns the name of the Thymeleaf template for event details
     }
+
 }

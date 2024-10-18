@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/chatbot")
@@ -217,20 +218,27 @@ public class ChatbotController {
             return new ResponseEntity<>(new DialogflowResponse("User session is not valid. Please start again."), HttpStatus.OK);
         }
 
-        EventModel event = eventService.findByEventName(eventName);
-        if (event != null) {
+        // Use Optional for event lookup
+        Optional<EventModel> eventOpt = eventService.findByEventName(eventName);
+        if (eventOpt.isPresent()) {
+            EventModel event = eventOpt.get();
+
+            // Set up context path and output context for event details
             String contextPath = String.format("projects/%s/agent/sessions/%s/contexts/event_details", "steppa-osnw", sessionId);
             OutputContext eventContext = new OutputContext();
             eventContext.setName(contextPath);
             eventContext.getParameters().put("event_id", event.getId());
 
+            // Build and return a DialogflowResponse
             DialogflowResponse response = new DialogflowResponse("Great! What type of ticket would you like to buy (e.g., VIP, General)?");
             response.setOutputContexts(new OutputContext[]{eventContext});
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
+            // Handle case where event is not found
             return new ResponseEntity<>(new DialogflowResponse("Sorry, I couldn't find an event with that name. Please provide a valid event name."), HttpStatus.OK);
         }
     }
+
 
     // Handle the ticket type request and calculate total price based on quantity
     private ResponseEntity<DialogflowResponse> handleTicketTypeRequest(Map<String, String> parameters, OutputContext[] contexts, String sessionId) {

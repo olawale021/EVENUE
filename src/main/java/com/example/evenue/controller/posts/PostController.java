@@ -56,6 +56,8 @@ public class PostController {
      * @param images    A list of images to upload.
      * @return          A redirect to the posts list page.
      */
+
+
     @PostMapping("/create")
     public String createPost(
             @RequestParam String title,
@@ -88,6 +90,7 @@ public class PostController {
      * @param postId The ID of the post to retrieve.
      * @return       A page displaying the post details.
      */
+
     @GetMapping("/{postId}")
     public String getPostById(@PathVariable Long postId, Model model) {
         // Fetch the post response
@@ -149,9 +152,6 @@ public class PostController {
         postService.updatePost(postId, title, content, eventId, images, removeImages); // Pass title as the first parameter
         return "redirect:/posts";
     }
-
-
-
 
     /**
      * Serve the delete confirmation page.

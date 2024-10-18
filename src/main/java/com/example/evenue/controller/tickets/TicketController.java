@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -39,12 +40,13 @@ public class TicketController {
     // Endpoint to show the form for adding a new ticket type to an event
     @GetMapping("/types/add/{eventId}")
     public String showAddTicketTypeForm(@PathVariable Long eventId, Model model) {
-        EventModel event = eventService.getEventById(eventId);
-        if (event == null) {
+        Optional<EventModel> eventOpt = eventService.getEventById(eventId);
+        if (eventOpt.isEmpty()) {
             model.addAttribute("error", "Event not found");
             return "error";
         }
 
+        EventModel event = eventOpt.get();
         TicketTypeModel ticketType = new TicketTypeModel();
         ticketType.setEvent(event); // Set the event object to the ticket type
 
@@ -53,6 +55,7 @@ public class TicketController {
         return "add-ticket-type"; // The form template to add ticket type
     }
 
+
     // Endpoint to handle the creation of a new ticket type
     @PostMapping("/types/add")
     public String addTicketType(
@@ -60,14 +63,16 @@ public class TicketController {
             @RequestParam("eventId") Long eventId,
             Model model) {
 
-        EventModel event = eventService.getEventById(eventId);
-        if (event == null) {
+        Optional<EventModel> eventOpt = eventService.getEventById(eventId);
+        if (eventOpt.isEmpty()) {
             model.addAttribute("error", "Event not found");
             return "error";
         }
 
+        EventModel event = eventOpt.get();
         ticketType.setEvent(event);
 
+        // Validate ticket type details
         if (ticketType.getPrice() == null || ticketType.getQuantity() == null || ticketType.getTypeName() == null) {
             model.addAttribute("error", "All fields are required.");
             model.addAttribute("event", event);
@@ -89,20 +94,23 @@ public class TicketController {
 
 
 
+
     // Endpoint to view all ticket types for an event
     @GetMapping("/types/{eventId}")
     public String viewTicketTypes(@PathVariable Long eventId, Model model) {
-        EventModel event = eventService.getEventById(eventId);
-        if (event == null) {
+        Optional<EventModel> eventOpt = eventService.getEventById(eventId);
+        if (eventOpt.isEmpty()) {
             model.addAttribute("error", "Event not found");
             return "error";
         }
 
+        EventModel event = eventOpt.get();
         List<TicketTypeModel> ticketTypes = ticketTypeService.getTicketTypesByEventId(eventId);
         model.addAttribute("event", event);
         model.addAttribute("ticketTypes", ticketTypes);
         return "view-ticket-types";
     }
+
 
     // Endpoint to show form for creating a ticket for a specific ticket type
     @GetMapping("/buy/{ticketTypeId}")
@@ -150,13 +158,16 @@ public class TicketController {
         }
 
         // Retrieve event and ticket type
-        EventModel event = eventService.getEventById(eventId);
-        TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
+        Optional<EventModel> eventOpt = eventService.getEventById(eventId);
+        Optional<TicketTypeModel> ticketTypeOpt = Optional.ofNullable(ticketTypeService.getTicketTypeById(ticketTypeId));
 
-        if (event == null || ticketType == null) {
+        if (eventOpt.isEmpty() || ticketTypeOpt.isEmpty()) {
             model.addAttribute("error", "Invalid event or ticket type.");
             return "confirm-ticket-purchase";
         }
+
+        EventModel event = eventOpt.get();
+        TicketTypeModel ticketType = ticketTypeOpt.get();
 
         if (ticketType.getRemainingQuantity() < quantity) {
             model.addAttribute("error", "Not enough tickets available for this type.");
@@ -185,6 +196,7 @@ public class TicketController {
         // Redirect to success page and pass the ticket code
         return "redirect:/tickets/success?ticketCode=" + ticket.getTicketCode();
     }
+
 
 
     @GetMapping("/success")

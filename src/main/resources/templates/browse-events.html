@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Add CSRF token as a meta tag in your HTML head -->
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
   <title>Explore Events</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -75,7 +79,6 @@
         </div>
       </div>
     </div>
-
     <!-- Events Column -->
     <div class="w-3/4">
       <div th:each="event : ${events}" class="bg-white rounded-lg p-4 mb-4 transition transform hover:shadow-lg hover:rounded-lg" style="width: 65%; list-style: none">
@@ -93,18 +96,20 @@
                 </h3>
               </div>
               <div class="flex space-x-2">
-                <button class="text-gray-400 hover:text-gray-600">
-                  <!-- Share icon -->
-                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08C17.24 16.08 16.56 16.38 16.06 16.88L8.91 12.7C8.96 12.47 9 12.24 9 12C9 11.76 8.96 11.53 8.91 11.3L15.96 7.16C16.5 7.66 17.21 8 18 8C19.66 8 21 6.66 21 5C21 3.34 19.66 2 18 2C16.34 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.84C7.5 9.34 6.79 9 6 9C4.34 9 3 10.34 3 12C3 13.66 4.34 15 6 15C6.79 15 7.5 14.66 8.04 14.16L15.19 18.34C15.14 18.56 15.1 18.78 15.1 19C15.1 20.66 16.44 22 18.1 22C19.76 22 21.1 20.66 21.1 19C21.1 17.34 19.76 16 18.1 16Z"/></svg>
-                </button>
-                <button class="text-gray-400 hover:text-gray-600">
-                  <!-- Like icon -->
-                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.1 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12.1 21.35Z"/></svg>
-                </button>
-                <button class="text-gray-400 hover:text-gray-600">
-                  <!-- More options icon -->
-                  <svg class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8C13.1 8 14 7.1 14 6C14 4.9 13.1 4 12 4C10.9 4 10 4.9 10 6C10 7.1 10.9 8 12 8ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM12 16C10.9 16 10 16.9 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16.9 13.1 16 12 16Z"/></svg>
-                </button>
+                <!-- Like/Unlike Form -->
+                <form th:action="@{/wishlist/toggleLike}" method="post">
+                  <input type="hidden" name="userId" th:value="${loggedInUser.id}">
+                  <input type="hidden" name="eventId" th:value="${event.id}">
+                  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                  <button type="submit" class="text-gray-400 hover:text-gray-600">
+                    <svg th:class="${event.isLiked} ? 'w-5 h-5 text-red-500' : 'w-5 h-5 text-gray-400'"
+                         id="like-icon-${event.id}" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <path d="M12.1 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12.1 21.35Z"/>
+                    </svg>
+                  </button>
+                </form>
               </div>
             </div>
             <div class="flex items-center text-sm text-gray-600 mb-1">
@@ -119,6 +124,7 @@
         </div>
       </div>
     </div>
+
 
     <div class="w-1/4">
       <div class="sticky-banner sticky">
@@ -153,4 +159,5 @@
 <!-- Footer Section -->
 <div th:insert="footer :: footer"></div>
 </body>
+
 </html>

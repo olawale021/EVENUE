@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/webhook")
@@ -96,14 +97,15 @@ public class DialogflowWebhookController {
         System.out.println("Event name received (normalized): " + eventName);
 
         // Find event by name (case-insensitive search)
-        EventModel event = eventService.findByEventName(eventName);
+        Optional<EventModel> eventOpt = eventService.findByEventName(eventName);
 
-        if (event == null) {
+        if (eventOpt.isEmpty()) {
             // Event not found, prompt the user to provide a valid event name
             Map<String, Object> fulfillmentResponse = new HashMap<>();
             fulfillmentResponse.put("fulfillmentText", "I'm sorry, I couldn't find the event: " + eventName + ". Please provide a valid event name.");
             return ResponseEntity.ok(fulfillmentResponse);
         }
+        EventModel event = eventOpt.get();
 
         // Retrieve available ticket types for the event
         List<TicketTypeModel> ticketTypes = ticketTypeService.getTicketTypesByEventId(event.getId());
@@ -146,6 +148,7 @@ public class DialogflowWebhookController {
 
         return ResponseEntity.ok(fulfillmentResponse);
     }
+
 
     private ResponseEntity<Map<String, Object>> handleCollectTicketTypeIntent(Map<String, Object> queryResult, Map<String, Object> request) {
         // Extract ticket type and quantity from user input
@@ -311,12 +314,13 @@ public class DialogflowWebhookController {
             }
 
             // Fetch the event and ticket type
-            EventModel event = eventService.getEventById(eventId);
-            if (event == null) {
+            Optional<EventModel> eventOpt = eventService.getEventById(eventId);
+            if (eventOpt.isEmpty()) {
                 Map<String, Object> fulfillmentResponse = new HashMap<>();
                 fulfillmentResponse.put("fulfillmentText", "Event not found. Please provide a valid event.");
                 return ResponseEntity.ok(fulfillmentResponse);
             }
+            EventModel event = eventOpt.get();
 
             TicketTypeModel ticketType = ticketTypeService.getTicketTypeById(ticketTypeId);
             if (ticketType == null) {
@@ -363,6 +367,7 @@ public class DialogflowWebhookController {
             return ResponseEntity.ok(fulfillmentResponse);
         }
     }
+
 
 
 

@@ -55,6 +55,9 @@ public class EventModel {
     @JoinColumn(name = "category_id", nullable = false)
     private EventCategory eventCategory; // Reference to EventCategory entity
 
+    @Transient
+    private boolean isLiked; // Transient field, not stored in the database
+
     // Check if the event is upcoming
     public boolean isUpcoming() {
         return eventDate.isAfter(ChronoLocalDate.from(LocalDateTime.now()));
@@ -199,6 +202,14 @@ public class EventModel {
 
     public void setEventCategory(EventCategory eventCategory) {
         this.eventCategory = eventCategory;
+    }
+
+    public boolean isLiked() {
+        return isLiked;
+    }
+
+    public void setLiked(boolean liked) {
+        isLiked = liked;
     }
 
     @PrePersist
