@@ -8,6 +8,9 @@ import com.example.evenue.service.EventService;
 import com.example.evenue.service.PostService;
 import com.example.evenue.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -34,8 +37,17 @@ public class PostController {
      * Serve the page for creating a new post.
      */
     @GetMapping("/create")
-    public String showCreatePostForm(Model model) {
-        List<EventModel> events = eventService.getAllEvents();
+    public String showCreatePostForm(Model model,
+                                     @RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "5") int size) {
+        // Create a Pageable object with page number and size
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Fetch paginated events
+        Page<EventModel> eventsPage = eventService.getAllEvents(pageable);
+
+        // Get the list of events for this page
+        List<EventModel> events = eventsPage.getContent();
 
         if (events.isEmpty()) {
             System.out.println("No events found!");
@@ -44,8 +56,12 @@ public class PostController {
         }
 
         model.addAttribute("events", events);
-        return "create-post";
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", eventsPage.getTotalPages());
+
+        return "create-post";  // Return the view for creating a new post
     }
+
 
 
     /**
@@ -128,14 +144,32 @@ public class PostController {
      * Serve the edit post form.
      */
     @GetMapping("/{postId}/edit")
-    public String showEditPostForm(@PathVariable Long postId, Model model) {
+    public String showEditPostForm(@PathVariable Long postId,
+                                   @RequestParam(defaultValue = "0") int page,   // Add page and size parameters
+                                   @RequestParam(defaultValue = "5") int size,
+                                   Model model) {
+        // Fetch the post by ID
         PostResponse post = postService.getPostById(postId);
-        List<EventModel> events = eventService.getAllEvents();
+
+        // Create Pageable object
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Fetch paginated events
+        Page<EventModel> eventsPage = eventService.getAllEvents(pageable);
+
+        // Get the list of events for the current page
+        List<EventModel> events = eventsPage.getContent();
 
         model.addAttribute("post", post);
         model.addAttribute("events", events);
-        return "edit-post"; // Return the edit-post.html template
+
+        // Add pagination info
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", eventsPage.getTotalPages());
+
+        return "edit-post";  // Return the edit-post.html template
     }
+
 
     /**
      * Handle the submission of an edited post.

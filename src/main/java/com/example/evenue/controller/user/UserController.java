@@ -8,6 +8,9 @@ import com.example.evenue.service.TicketService;
 import com.example.evenue.service.UserService;
 import com.example.evenue.models.users.Role;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -117,7 +120,9 @@ public class UserController {
 
     // Serve the dashboard page
     @GetMapping("/attendee/dashboard")
-    public String showDashboard(Model model) {
+    public String showDashboard(Model model,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "5") int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/users/login";
@@ -126,18 +131,25 @@ public class UserController {
         String email = authentication.getName(); // This will be the email address
         UserModel user = userService.findUserByEmail(email); // Use userService
 
-        // Fetch the list of events to pass to the modal (for creating posts)
-        List<EventModel> events = eventService.getAllEvents();
-
         if (user == null) {
             // This shouldn't happen if the user is authenticated, but just in case
             return "redirect:/users/login";
         }
 
+        // Create a Pageable object with page number and size
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Fetch the paginated list of events
+        Page<EventModel> events = eventService.getAllEvents(pageable);
+
         model.addAttribute("user", user);
-        model.addAttribute("events", events);
+        model.addAttribute("events", events.getContent());  // Get the event content for this page
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", events.getTotalPages());
+
         return "dashboard";
     }
+
 
     // Serve the role selection page
     @GetMapping("/set-role")
@@ -186,7 +198,7 @@ public class UserController {
             if (userRole == Role.ORGANIZER) {
                 return "redirect:/organizer/dashboard";
             } else {
-                return "redirect:/users/dashboard";
+                return "redirect:/users/attendee/dashboard";
             }
         } catch (IllegalArgumentException e) {
             // Invalid role provided

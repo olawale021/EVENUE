@@ -2,6 +2,7 @@ package com.example.evenue.controller.wishlist;
 
 import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.users.UserModel;
+import com.example.evenue.models.wishlist.WishlistModel;
 import com.example.evenue.service.WishlistService;
 import com.example.evenue.service.UserService;
 import com.example.evenue.service.EventService;
@@ -12,8 +13,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/wishlist")
@@ -28,27 +33,44 @@ public class WishlistController {
     @Autowired
     private EventService eventService;
 
-    // Get all wishlist items for a specific user
-    @GetMapping("/user")
+    private static final Logger logger = LoggerFactory.getLogger(WishlistController.class);
+
+
+    @GetMapping
     public String getWishlistByUser(Model model) {
         // Retrieve the currently authenticated user from Spring Security context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
 
-        // Fetch user by email (assuming you have a method to find by email)
+        // Fetch the user by email (assuming you have a method to find by email)
         Optional<UserModel> user = Optional.ofNullable(userService.findUserByEmail(userEmail));
 
         if (user.isPresent()) {
-            List<EventModel> wishlistItems = wishlistService.getWishlistByUser(user.get());
+            // Fetch wishlist items associated with the user
+            List<WishlistModel> wishlistItems = wishlistService.getWishlistByUser(user.get());
+
+            // Log wishlist items for debugging purposes
+            logger.info("Logging wishlist items for user: " + userEmail);
+            for (WishlistModel item : wishlistItems) {
+                logger.info("Wishlist ID: " + item.getId() + ", Event Name: " + item.getEvent().getEventName() + ", Event ID: " + item.getEvent().getId());
+            }
+
+            // Add the list of wishlist items to the model, for rendering in the view
             model.addAttribute("wishlistItems", wishlistItems);
-            return "wishlist"; // Return the wishlist view
+
+            // Return the name of the Thymeleaf template for the wishlist view
+            return "wishlist";
         } else {
+            // Handle the case when the user is not found (shouldn't happen if authenticated)
             model.addAttribute("errorMessage", "User not found.");
-            return "error"; // Redirect to error page
+            return "error"; // Redirect to an error page if the user is not found
         }
     }
 
-    // Add an event or product to the wishlist
+
+
+
+    // Add an event to the wishlist
     @PostMapping("/add")
     public String addToWishlist(@RequestParam Long userId, @RequestParam Long eventId, Model model) {
         Optional<UserModel> user = Optional.ofNullable(userService.findUserById(Math.toIntExact(userId)));
@@ -56,24 +78,24 @@ public class WishlistController {
 
         if (user.isPresent() && event.isPresent()) {
             wishlistService.addEventToWishlist(user.get(), event.get());
-            return "redirect:/wishlist/user/" + userId; // Redirect to the user's wishlist
+            return "redirect:/wishlist" + userId; // Redirect to the user's wishlist
         } else {
             model.addAttribute("errorMessage", "User or Event not found.");
             return "error"; // Redirect to error page
         }
     }
 
-    // Remove an event or product from the wishlist
     @DeleteMapping("/remove/{wishlistId}")
     public String removeFromWishlist(@PathVariable Long wishlistId, Model model) {
         boolean removed = wishlistService.removeFromWishlist(wishlistId);
         if (removed) {
-            return "redirect:/wishlist/user"; // Redirect back to the wishlist after removing the item
+            return "redirect:/wishlist"; // Redirect back to the wishlist after removing the item
         } else {
             model.addAttribute("errorMessage", "Wishlist item not found.");
             return "error"; // Redirect to error page
         }
     }
+
 
     // Check if an event is liked by a specific user
     @GetMapping("/isLikedAndInWishlist")

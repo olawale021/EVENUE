@@ -18,12 +18,10 @@ public class WishlistService {
     private WishlistDao wishlistDao;
 
     // Get all wishlist events for a user
-    public List<EventModel> getWishlistByUser(UserModel user) {
-        List<WishlistModel> wishlistItems = wishlistDao.findByUser(user);
-        return wishlistItems.stream()
-                .map(WishlistModel::getEvent) // Extract EventModel from WishlistModel
-                .collect(Collectors.toList());
+    public List<WishlistModel> getWishlistByUser(UserModel user) {
+        return wishlistDao.findByUser(user);
     }
+
 
     // Add an event to the user's wishlist
     public WishlistModel addEventToWishlist(UserModel user, EventModel event) {

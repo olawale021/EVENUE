@@ -7,7 +7,11 @@
                 </div>
                 <div class="hidden md:flex items-center space-x-6">
                     <a href="/events/browse" class="text-gray-800 hover:text-purple-600">Find Events</a>
-                    <a href="/events/create" class="text-gray-800 hover:text-purple-600">Create Events</a>
+
+                    <!-- Only show Create Events if user is an ORGANIZER -->
+                    <a th:if="${#arrays.contains(#authentication.authorities.![authority], 'ROLE_ORGANIZER')}"
+                       href="/events/create" class="text-gray-800 hover:text-purple-600">Create Events</a>
+
                     <a href="/posts" class="text-gray-800 hover:text-purple-600">Community</a>
                     <a href="#" class="text-gray-800 hover:text-purple-600">About</a>
                     <a href="#" class="text-gray-800 hover:text-purple-600">Contact Us</a>
@@ -30,14 +34,13 @@
                             </a>
                             <a th:if="${#arrays.contains(#authentication.authorities.![authority], 'ROLE_ATTENDEE')}"
                                href="/users/attendee/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                                 Dashboard
+                                Dashboard
                             </a>
 
                             <!-- Browse Events Link -->
                             <a href="/events/browse" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Browse Events</a>
 
-
-                            <a href="/wishlist/user" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Wishlist</a>
+                            <a href="/wishlist" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Wishlist</a>
 
                             <a href="/friends" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Friends</a>
 

@@ -5,6 +5,8 @@ import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.tickets.TicketDao;
 import com.example.evenue.models.users.UserModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +27,8 @@ public class EventService {
         return eventDao.save(event);
     }
 
-    public List<EventModel> getAllEvents() {
-        return eventDao.findAll();
+    public Page<EventModel> getAllEvents(Pageable pageable) {
+        return eventDao.findAll(pageable);
     }
 
     public Optional<EventModel> getEventById(Long eventId) {
@@ -34,23 +36,11 @@ public class EventService {
     }
 
     // Implement filter logic
-    public List<EventModel> filterEvents(Long categoryId, String search, String sortBy) {
-        // Default sorting by event date in descending order
-        Sort sort = Sort.by(Sort.Direction.DESC, "eventDate");
-
-        // If a valid sortBy field is provided, set ascending sort for that field
-        if (sortBy != null && !sortBy.isEmpty()) {
-            sort = Sort.by(Sort.Direction.ASC, sortBy);
-        }
-
-        // Filter by category and search text with sorting
+    public Page<EventModel> filterEvents(Long categoryId, String search, Pageable pageable) {
         if (categoryId != null && categoryId > 0) {
-            return eventDao.findByCategoryAndSearch(categoryId, search, sort);
+            return eventDao.findByCategoryAndSearch(categoryId, search, pageable);
         }
-        // Filter by search text with sorting
-        else {
-            return eventDao.findBySearch(search, sort);
-        }
+        return eventDao.findBySearch(search, pageable);
     }
 
     // Method to find an event by name

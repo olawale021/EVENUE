@@ -11,6 +11,10 @@ import com.example.evenue.service.TicketTypeService;
 import com.example.evenue.service.UserService;
 import com.example.evenue.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -107,25 +111,35 @@ public class EventController {
         return "redirect:/events/create";
     }
 
-    // Browse events - GET method to display events
+    // Browse events - GET method with pagination support
     @GetMapping("/browse")
-    public String browseEvents(Model model, Authentication authentication) {
+    public String browseEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
+            Model model, Authentication authentication) {
+
         // Fetch the logged-in user
-        String userEmail = authentication.getName();  // This retrieves the email (or username)
+        String userEmail = authentication.getName();
         UserModel loggedInUser = userService.findUserByEmail(userEmail);
         model.addAttribute("loggedInUser", loggedInUser);
 
-        // Fetch all events
-        List<EventModel> events = eventService.getAllEvents();
+        // Fetch all events with pagination
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<EventModel> eventPage = eventService.getAllEvents(pageable);
 
         // Set 'isLiked' flag for each event
-        for (EventModel event : events) {
+        for (EventModel event : eventPage.getContent()) {
             boolean isLiked = wishlistService.isEventLikedByUser(loggedInUser, event);
-            event.setLiked(isLiked);  // Assuming EventModel has setIsLiked() method
+            event.setLiked(isLiked);  // Ensure this method exists in your EventModel
         }
-        model.addAttribute("events", events);
 
-        // Fetch all categories for filtering purposes
+        model.addAttribute("events", eventPage.getContent());
+        model.addAttribute("totalPages", eventPage.getTotalPages());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("size", size);
+
+        // Fetch categories for filtering
         List<EventCategory> categories = eventCategoryDao.findAll();
         model.addAttribute("categories", categories);
 
@@ -134,19 +148,26 @@ public class EventController {
 
 
 
-    // Browse events - POST method to handle filtering of events
+
+    // Filter events with pagination
     @PostMapping("/browse")
     public String filterEvents(
             @RequestParam("category") Long categoryId,
             @RequestParam("search") String search,
-            @RequestParam("sortBy") String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "eventDate") String sortBy,
             Model model) {
 
-        // Filter events based on category, search text, and sort order
-        List<EventModel> filteredEvents = eventService.filterEvents(categoryId, search, sortBy);
-        model.addAttribute("events", filteredEvents);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<EventModel> filteredEvents = eventService.filterEvents(categoryId, search, pageable);
 
-        // Also add the categories again for the filter dropdown
+        model.addAttribute("events", filteredEvents.getContent());
+        model.addAttribute("totalPages", filteredEvents.getTotalPages());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("size", size);
+
+        // Add categories again for the filter dropdown
         List<EventCategory> categories = eventCategoryDao.findAll();
         model.addAttribute("categories", categories);
 
