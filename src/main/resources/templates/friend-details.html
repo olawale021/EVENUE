@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friend Details</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- Header Fragment -->
+<div th:insert="~{header :: headerFragment}"></div>
+
+<!-- Main Content -->
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <h1 class="text-4xl font-bold text-gray-900 mb-6" th:text="${friend.firstName + ' ' + friend.lastName}">Friend Name</h1>
+
+  <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+    <h2 class="text-3xl font-semibold text-gray-800 mb-4">Details</h2>
+    <div class="space-y-4">
+      <p class="text-lg"><strong>Email:</strong> <span class="text-gray-700" th:text="${friend.email}">friend.email</span></p>
+      <p class="text-lg"><strong>Location:</strong> <span class="text-gray-700" th:text="${friend.city + ', ' + friend.postalCode}">City, Postal Code</span></p>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-lg shadow-lg">
+    <h2 class="text-3xl font-semibold text-gray-800 mb-4">Attending Events</h2>
+
+    <div th:if="${attendingEvents.size() > 0}">
+      <ul class="space-y-4">
+        <li th:each="event : ${attendingEvents}" class="p-4 bg-gray-50 rounded-lg shadow-md">
+          <h3 class="text-2xl font-bold text-blue-600" th:text="${event.eventName}">Event Name</h3>
+          <p class="text-gray-600 mt-2" th:text="${'Date: ' + #temporals.format(event.eventDate, 'MMMM dd, yyyy')}">Event Date</p>
+          <p class="text-gray-600" th:text="${event.location}">Location</p>
+        </li>
+      </ul>
+    </div>
+
+    <div th:if="${attendingEvents.size() == 0}" class="text-center py-12">
+      <p class="text-xl text-gray-600">This friend is not attending any events yet.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer Fragment -->
+<div th:insert="~{footer :: footer}"></div>
+
+</body>
+</html>

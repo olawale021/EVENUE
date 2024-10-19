@@ -8,6 +8,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface UserDao extends JpaRepository<UserModel, Integer> {
 
@@ -25,4 +28,10 @@ public interface UserDao extends JpaRepository<UserModel, Integer> {
 
     // Other custom query methods
     UserModel findByEmail(String email);
+
+    // Find user by username
+    Optional<UserModel> findByUserName(String username);
+
+    // Optionally, for partial matches
+    List<UserModel> findByUserNameContainingIgnoreCase(String username);
 }

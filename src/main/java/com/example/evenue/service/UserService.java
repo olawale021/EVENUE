@@ -6,6 +6,7 @@ import com.example.evenue.models.users.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -53,5 +54,18 @@ public class UserService {
             user.setRole(role); // Set the new role
             userDao.save(user); // Save the updated user record
         }
+    }
+
+    public Optional<UserModel> findUserByUsername(String username) {
+        return userDao.findByUserName(username);
+    }
+
+    // Optionally, for partial matches
+    public List<UserModel> searchUsersByUsername(String username) {
+        return userDao.findByUserNameContainingIgnoreCase(username);
+    }
+    // Method to search for users by a partial username
+    public List<UserModel> findByUserNameContaining(String username) {
+        return userDao.findByUserNameContainingIgnoreCase(username);
     }
 }

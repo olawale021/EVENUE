@@ -31,4 +31,6 @@ public interface EventDao extends JpaRepository<EventModel, Long> {
 //    Optional<EventModel> findByEventName(String eventName);
 
     Optional<EventModel> findByEventName(String eventName);
+
+
 }
