@@ -40,27 +40,29 @@ public class PostController {
     public String showCreatePostForm(Model model,
                                      @RequestParam(defaultValue = "0") int page,
                                      @RequestParam(defaultValue = "5") int size) {
-        // Create a Pageable object with page number and size
+        // Create a Pageable object with page number and size for paginated events
         Pageable pageable = PageRequest.of(page, size);
 
-        // Fetch paginated events
+        // Fetch paginated events for main display
         Page<EventModel> eventsPage = eventService.getAllEvents(pageable);
 
-        // Get the list of events for this page
-        List<EventModel> events = eventsPage.getContent();
+        // Get the list of paginated events for this page
+        List<EventModel> paginatedEvents = eventsPage.getContent();
 
-        if (events.isEmpty()) {
-            System.out.println("No events found!");
-        } else {
-            System.out.println("Events found: " + events.size());
-        }
+        // Fetch all events for the dropdown (without pagination)
+        List<EventModel> allEventsForDropdown = eventService.getAllEventsForDropdown();
 
-        model.addAttribute("events", events);
+        // Add paginated events to the model
+        model.addAttribute("events", paginatedEvents);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", eventsPage.getTotalPages());
 
+        // Add all events (non-paginated) for the dropdown to the model
+        model.addAttribute("allEvents", allEventsForDropdown);
+
         return "create-post";  // Return the view for creating a new post
     }
+
 
 
 

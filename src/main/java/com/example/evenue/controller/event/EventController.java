@@ -22,9 +22,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +51,8 @@ public class EventController {
 
     @Autowired
     private WishlistService wishlistService;
+
+    private static final Logger logger = LoggerFactory.getLogger(EventController.class);
 
     // Endpoint to display the create event form
     @GetMapping("/create")
@@ -116,7 +122,9 @@ public class EventController {
     public String browseEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "eventDate") String sortBy,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String price,
             Model model, Authentication authentication) {
 
         // Fetch the logged-in user
@@ -124,14 +132,37 @@ public class EventController {
         UserModel loggedInUser = userService.findUserByEmail(userEmail);
         model.addAttribute("loggedInUser", loggedInUser);
 
-        // Fetch all events with pagination
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
-        Page<EventModel> eventPage = eventService.getAllEvents(pageable);
+        // Initialize categories to an empty list if null
+        if (categories == null) {
+            categories = new ArrayList<>();
+        }
+
+        // Log the filter values
+        logger.info("Categories: {}", categories);
+        logger.info("Date filter: {}", date);
+        logger.info("Price filter: {}", price);
+
+
+
+
+        // Create pageable object
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Fetch filtered events
+        Page<EventModel> eventPage;
+        if (categories.isEmpty() && (date == null || date.isEmpty()) && (price == null || price.isEmpty())) {
+            eventPage = eventService.getAllEvents(pageable);
+        } else {
+            eventPage = eventService.getFilteredEvents(categories, date, price, pageable);
+        }
+
+        // Log the number of events fetched
+        logger.info("Number of events fetched: {}", eventPage.getTotalElements());
 
         // Set 'isLiked' flag for each event
         for (EventModel event : eventPage.getContent()) {
             boolean isLiked = wishlistService.isEventLikedByUser(loggedInUser, event);
-            event.setLiked(isLiked);  // Ensure this method exists in your EventModel
+            event.setLiked(isLiked);
         }
 
         model.addAttribute("events", eventPage.getContent());
@@ -140,11 +171,20 @@ public class EventController {
         model.addAttribute("size", size);
 
         // Fetch categories for filtering
-        List<EventCategory> categories = eventCategoryDao.findAll();
-        model.addAttribute("categories", categories);
+        List<EventCategory> eventCategories = eventCategoryDao.findAll();
+        model.addAttribute("categories", eventCategories);
+
+        // Ensure date and price filters are passed back
+        model.addAttribute("selectedDate", date != null ? date : "");
+        model.addAttribute("selectedPrice", price != null ? price : "");
+        // Add selectedCategories to the model
+        model.addAttribute("selectedCategories", categories);
 
         return "browse-events";
     }
+
+
+
 
 
 
@@ -207,6 +247,12 @@ public class EventController {
         model.addAttribute("maxPrice", maxPrice);
 
         return "event-details"; // Returns the name of the Thymeleaf template for event details
+    }
+
+    @GetMapping("/search-events")
+    public List<EventModel> searchEvents(@RequestParam String query) {
+        // Fetch events based on search query
+        return eventService.searchEvents(query);
     }
 
 }

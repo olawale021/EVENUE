@@ -1,10 +1,12 @@
 package com.example.evenue.models.events;
 
+import com.example.evenue.models.tickets.TicketTypeModel;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -54,6 +56,9 @@ public class EventModel {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     private EventCategory eventCategory; // Reference to EventCategory entity
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TicketTypeModel> ticketTypes;
 
     @Transient
     private boolean isLiked; // Transient field, not stored in the database
@@ -202,6 +207,15 @@ public class EventModel {
 
     public void setEventCategory(EventCategory eventCategory) {
         this.eventCategory = eventCategory;
+    }
+
+    // Getters and setters for all fields, including ticketTypes
+    public List<TicketTypeModel> getTicketTypes() {
+        return ticketTypes;
+    }
+
+    public void setTicketTypes(List<TicketTypeModel> ticketTypes) {
+        this.ticketTypes = ticketTypes;
     }
 
     public boolean isLiked() {

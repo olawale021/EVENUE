@@ -25,56 +25,84 @@
     <div class="w-1/4 pr-6">
       <h2 class="text-xl font-bold mb-4">Filters</h2>
 
-      <!-- Category Filter -->
-      <div class="mb-4">
-        <h3 class="font-semibold mb-2">Category</h3>
-        <div th:each="category : ${categories}" class="flex items-center mb-2">
-          <input type="checkbox" th:id="${'category-' + category.id}" th:value="${category.id}" class="mr-2">
-          <!-- Category icons -->
-          <label th:for="${'category-' + category.id}" th:text="${category.name}" class="text-sm"></label>
+      <!-- Filter Form -->
+      <form action="/events/browse" method="get" id="filterForm">
+        <!-- Category Filter -->
+        <div class="mb-6">
+          <h3 class="font-semibold mb-2">Category</h3>
+          <div th:each="category : ${categories}" class="flex items-center mb-2">
+            <input type="checkbox"
+                   th:id="${'category-' + category.id}"
+                   th:name="categories"
+                   th:value="${category.id}"
+                   th:checked="${selectedCategories != null and #lists.contains(selectedCategories, category.id)}"
+                   class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+            <label th:for="${'category-' + category.id}" th:text="${category.name}" class="text-sm text-gray-700"></label>
+          </div>
         </div>
-        <a href="#" class="text-blue-600 text-sm">View more</a>
-      </div>
 
-      <!-- Date Filter -->
-      <div class="mb-4">
-        <h3 class="font-semibold mb-2">Date</h3>
-        <div th:each="dateOption : ${dateOptions}" class="flex items-center mb-2">
-          <input type="radio" th:id="${'date-' + dateOption.value}" th:value="${dateOption.value}" name="date" class="mr-2">
-          <label th:for="${'date-' + dateOption.value}" th:text="${dateOption.label}" class="text-sm"></label>
-        </div>
-        <a href="#" class="text-blue-600 text-sm">View more</a>
-      </div>
 
-      <!-- Price Filter -->
-      <div class="mb-4">
-        <h3 class="font-semibold mb-2">Price</h3>
-        <div class="flex items-center mb-2">
-          <input type="radio" id="price-free" value="free" name="price" class="mr-2">
-          <label for="price-free" class="text-sm">Free</label>
+        <!-- Date Filter -->
+        <div class="mb-6">
+          <h3 class="font-semibold mb-2">Date</h3>
+          <div class="flex flex-col">
+            <label class="inline-flex items-center">
+              <input type="radio" id="date-today" name="date" value="today" th:checked="${selectedDate == 'today'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Today</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="date-this-week" name="date" value="this-week" th:checked="${selectedDate == 'this-week'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">This Week</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="date-this-month" name="date" value="this-month" th:checked="${selectedDate == 'this-month'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">This Month</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="date-within-2-weeks" name="date" value="within-2-weeks" th:checked="${selectedDate == 'within-2-weeks'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Within 2 Weeks</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="date-within-1-month" name="date" value="within-1-month" th:checked="${selectedDate == 'within-1-month'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Within 1 Month</span>
+            </label>
+          </div>
         </div>
-        <div class="flex items-center mb-2">
-          <input type="radio" id="price-paid" value="paid" name="price" class="mr-2">
-          <label for="price-paid" class="text-sm">Paid</label>
-        </div>
-      </div>
 
-      <!-- Format Filter -->
-      <div>
-        <h3 class="font-semibold mb-2">Format</h3>
-        <div class="flex items-center mb-2">
-          <input type="checkbox" id="format-class" value="class" class="mr-2">
-          <label for="format-class" class="text-sm">Class</label>
+        <!-- Price Filter -->
+        <div class="mb-6">
+          <h3 class="font-semibold mb-2">Price</h3>
+          <div class="flex flex-col">
+            <label class="inline-flex items-center">
+              <input type="radio" id="price-free" name="price" value="free" th:checked="${selectedPrice == 'free'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Free</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="price-under-30" name="price" value="under-30" th:checked="${selectedPrice == 'under-30'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Under £30</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="price-30-100" name="price" value="between-30-and-100" th:checked="${selectedPrice == 'between-30-and-100'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">£30 - £100</span>
+            </label>
+            <label class="inline-flex items-center mt-2">
+              <input type="radio" id="price-over-100" name="price" value="over-100" th:checked="${selectedPrice == 'over-100'}" class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+              <span class="text-gray-700">Over £100</span>
+            </label>
+          </div>
         </div>
-        <div class="flex items-center mb-2">
-          <input type="checkbox" id="format-conference" value="conference" class="mr-2">
-          <label for="format-conference" class="text-sm">Conference</label>
+
+        <!-- Apply and Clear Buttons -->
+        <div class="flex justify-between">
+          <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 mr-2">Apply Filters</button>
+          <a href="/events/browse" class="w-full bg-gray-400 text-white font-semibold py-2 rounded-md text-center hover:bg-gray-500">Clear Filters</a>
         </div>
-      </div>
+      </form>
     </div>
 
     <!-- Events Column -->
-    <div class="w-2/4"> <!-- Changed from w-3/4 to w-2/4 -->
+    <div class="w-2/4">
+      <!-- Loop through Events -->
       <div th:each="event : ${events}" class="bg-white rounded-lg p-4 mb-4 transition transform hover:shadow-lg hover:rounded-lg" style="width: 100%; list-style: none">
         <div class="flex">
           <img th:src="${event.eventImage}" alt="Event Image" class="w-1/3 h-32 object-cover rounded-lg mr-4">
@@ -84,8 +112,7 @@
                 <h3>
                   <a th:href="@{/events/details/{eventId}(eventId=${event.id})}"
                      th:text="${event.eventName}"
-                     class="text-l font-bold text-black hover:underline">
-                  </a>
+                     class="text-l font-bold text-black hover:underline"></a>
                 </h3>
               </div>
               <div class="flex space-x-2">
@@ -102,7 +129,6 @@
                       <path d="M12.1 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12.1 21.35Z"/>
                     </svg>
                   </button>
-
                 </form>
               </div>
             </div>
@@ -121,18 +147,14 @@
       <div class="flex justify-between items-center mt-6">
         <!-- Previous Page Button -->
         <a th:if="${currentPage > 0}" th:href="@{/events/browse(page=${currentPage - 1}, size=${size})}"
-           class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-          Previous
-        </a>
+           class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Previous</a>
 
         <!-- Current Page Indicator -->
         <span th:text="'Page ' + (${currentPage + 1}) + ' of ' + ${totalPages}" class="px-4 py-2"></span>
 
         <!-- Next Page Button -->
         <a th:if="${currentPage < totalPages - 1}" th:href="@{/events/browse(page=${currentPage + 1}, size=${size})}"
-           class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-          Next
-        </a>
+           class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Next</a>
       </div>
     </div>
 
@@ -140,7 +162,6 @@
     <div class="w-1/4">
       <div class="sticky-banner sticky">
         <h2 class="text-xl font-bold mb-4">Our Sponsors</h2>
-
         <!-- Sponsor Banner 1 -->
         <div class="bg-white shadow-lg rounded-lg p-4 mb-6">
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7J_jO7Ko7S4X7oo0p8OmjF896F34pIALn3A&s" alt="Sponsor Logo" class="w-full h-24 object-contain mb-2">
@@ -164,7 +185,6 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <!-- Footer Section -->

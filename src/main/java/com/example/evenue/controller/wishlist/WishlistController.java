@@ -1,5 +1,6 @@
 package com.example.evenue.controller.wishlist;
 
+import com.example.evenue.models.events.EventDao;
 import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.users.UserModel;
 import com.example.evenue.models.wishlist.WishlistModel;
@@ -33,6 +34,9 @@ public class WishlistController {
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private EventDao eventDao;
+
     private static final Logger logger = LoggerFactory.getLogger(WishlistController.class);
 
 
@@ -57,6 +61,12 @@ public class WishlistController {
 
             // Add the list of wishlist items to the model, for rendering in the view
             model.addAttribute("wishlistItems", wishlistItems);
+
+            // Fetch all events from the database
+            List<EventModel> events = eventDao.findAll();
+
+            // Add the events list to the model to be used in the view
+            model.addAttribute("events", events);
 
             // Return the name of the Thymeleaf template for the wishlist view
             return "wishlist";

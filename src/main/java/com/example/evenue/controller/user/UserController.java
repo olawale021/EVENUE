@@ -138,10 +138,14 @@ public class UserController {
 
         // Create a Pageable object with page number and size
         Pageable pageable = PageRequest.of(page, size);
+        // Fetch all events for the dropdown (without pagination)
+        List<EventModel> allEventsForDropdown = eventService.getAllEventsForDropdown();
 
         // Fetch the paginated list of events
         Page<EventModel> events = eventService.getAllEvents(pageable);
 
+        // Add all events (non-paginated) for the dropdown to the model
+        model.addAttribute("allEvents", allEventsForDropdown);
         model.addAttribute("user", user);
         model.addAttribute("events", events.getContent());  // Get the event content for this page
         model.addAttribute("currentPage", page);
