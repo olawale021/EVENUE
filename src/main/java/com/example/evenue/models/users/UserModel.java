@@ -1,6 +1,10 @@
 package com.example.evenue.models.users;
 
+import com.example.evenue.models.events.EventCategory;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -54,8 +58,14 @@ public class UserModel {
     @Column(name = "country")
     private String country;
 
-    @Column(name = "preferred_categories")
-    private String preferredCategories;
+    @ManyToMany
+    @JoinTable(
+            name = "user_preferred_categories",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<EventCategory> preferredCategories = new HashSet<>();
+
 
     @Column(name = "preferred_payment_method")
     private String preferredPaymentMethod;
@@ -186,11 +196,12 @@ public class UserModel {
         this.country = country;
     }
 
-    public String getPreferredCategories() {
+    // Getters and Setters for preferredCategories
+    public Set<EventCategory> getPreferredCategories() {
         return preferredCategories;
     }
 
-    public void setPreferredCategories(String preferredCategories) {
+    public void setPreferredCategories(Set<EventCategory> preferredCategories) {
         this.preferredCategories = preferredCategories;
     }
 

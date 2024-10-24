@@ -189,5 +189,61 @@
 
 <!-- Footer Section -->
 <div th:insert="footer :: footer"></div>
+
+<script>
+  let startTime = Date.now(); // Capture the start time when the page loads
+
+  // Function to get selected filter values
+  function getSelectedFilters() {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    let filterType = {};
+
+    // Get selected categories (if any)
+    const categories = formData.getAll('categories');
+    if (categories.length > 0) {
+      filterType['categories'] = categories;
+    }
+
+    // Get selected date filter
+    const date = formData.get('date');
+    if (date) {
+      filterType['date'] = date;
+    }
+
+    // Get selected price filter
+    const price = formData.get('price');
+    if (price) {
+      filterType['price'] = price;
+    }
+
+    return filterType;
+  }
+
+  // Send the session length and filter data when the user leaves the page
+  window.addEventListener('beforeunload', function (event) {
+    let endTime = Date.now();
+    let timeSpent = (endTime - startTime) / 1000; // Time spent in seconds
+
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+    // Get selected filters
+    const selectedFilters = getSelectedFilters();
+
+    // Prepare payload to be sent
+    const payload = {
+      timeSpent: timeSpent,
+      filterType: selectedFilters  // Include the filter types used
+    };
+
+    // Send the data to the server using navigator.sendBeacon to ensure it sends before page unload
+    navigator.sendBeacon('/events/log-behaviour', JSON.stringify(payload));
+
+    console.log('Session length logged: ', timeSpent, 'seconds');
+    console.log('Selected filters: ', selectedFilters);
+  });
+</script>
+
 </body>
 </html>

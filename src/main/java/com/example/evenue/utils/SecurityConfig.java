@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/webhook")  // Disabling CSRF for chatbot webhook
+                        .ignoringRequestMatchers("/webhook", "/events/log-behaviour")  // Disabling CSRF for chatbot webhook
                 )
                 .formLogin(form -> form
                         .loginPage("/users/login")

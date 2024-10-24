@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
   <title th:text="${event.eventName} + ' - Event Details'">Event Details</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -154,6 +157,37 @@
 <div th:insert="footer :: footer"></div>
 
 <script>
+  let startTime = Date.now(); // Capture the start time when the page loads
+
+  window.addEventListener('beforeunload', function (event) {
+    let endTime = Date.now();
+    let timeSpent = (endTime - startTime) / 1000; // Time spent in seconds
+    let eventId = [[${event.id}]]; // Get the event ID from Thymeleaf template
+
+    // Get CSRF token and header from the meta tags
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+    // Log the time spent to the console
+    console.log('beforeunload event triggered');
+    console.log('Event ID:', eventId, 'Time Spent:', timeSpent, 'seconds');
+
+    // Prepare payload with CSRF token
+    const payload = {
+      eventId: eventId,
+      timeSpent: timeSpent,
+      _csrf: csrfToken // Add CSRF token to the payload
+    };
+
+    // Send the time spent and CSRF token to the server with application/json content-type
+    const headers = {
+      type: 'application/json'
+    };
+    navigator.sendBeacon('/events/log-behaviour', JSON.stringify(payload));
+  });
+
+
+
+
   const selectedQuantities = {};
 
   function updateQuantity(ticketTypeId, quantity) {
@@ -190,6 +224,9 @@
       updateQuantity(ticketTypeId, selector.value);
     });
   });
+
+
+
 </script>
 
 </body>

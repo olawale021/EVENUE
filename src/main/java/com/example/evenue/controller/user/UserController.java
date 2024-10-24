@@ -1,5 +1,7 @@
 package com.example.evenue.controller.user;
 
+import com.example.evenue.models.events.EventCategory;
+import com.example.evenue.models.events.EventCategoryDao;
 import com.example.evenue.models.events.EventModel;
 import com.example.evenue.models.tickets.TicketModel;
 import com.example.evenue.models.users.UserModel;
@@ -16,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -47,6 +50,9 @@ public class UserController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    EventCategoryDao eventCategoryDao;
 
 
     // Serve the registration page
@@ -343,6 +349,35 @@ public class UserController {
 
         model.addAttribute("events", upcomingEvents); // Add events to the model
         return "user-upcoming-events"; // Return the Thymeleaf template for displaying upcoming events
+    }
+
+    // Method to render the form with categories
+    @GetMapping("/preferred-categories")
+    public String showPreferredCategoriesForm(Model model) {
+        // Fetch the currently authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+
+        // Use email to fetch the user
+        UserModel user = userService.findUserByEmail(email);  // Assuming you have a findByEmail method
+
+        // Fetch all event categories
+        List<EventCategory> categories = eventCategoryDao.findAll();
+
+        // Add user and categories to the model
+        model.addAttribute("user", user);
+        model.addAttribute("categories", categories);
+        model.addAttribute("selectedCategories", user.getPreferredCategories());
+
+        return "preferred-categories-form";  // Thymeleaf template name
+    }
+
+    // Method to handle form submission
+    @PostMapping("/{userId}/preferred-categories")
+    public String savePreferredCategories(@PathVariable Integer userId,
+                                          @RequestParam("selectedCategories") List<Long> selectedCategories) {
+        userService.updatePreferredCategories(userId, selectedCategories);
+        return "redirect:/users/preferred-categories";  // Redirect after saving
     }
 
 }

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Preferred Categories</title>
+</head>
+<body>
+
+<h2>Select Your Top 3 Preferred Categories</h2>
+
+<form th:action="@{/users/{userId}/preferred-categories(userId=${user.id})}" method="post">
+    <div th:each="category : ${categories}">
+        <input type="checkbox"
+               name="selectedCategories"
+        th:value="${category.id}"
+        th:checked="${selectedCategories.contains(category)}"/>
+        <label th:for="${category.id}" th:text="${category.name}"></label>
+        <br/>
+    </div>
+    <button type="submit">Save Preferences</button>
+</form>
+
+
+</body>
+</html>

@@ -44,8 +44,12 @@ public class EventService {
     }
 
     public Optional<EventModel> getEventById(Long eventId) {
-        return eventDao.findById(eventId); // Use Optional here
+        if (eventId == null) {
+            throw new IllegalArgumentException("Event ID must not be null");
+        }
+        return eventDao.findById(eventId);
     }
+
 
     // Implement filter logic
     public Page<EventModel> filterEvents(Long categoryId, String search, Pageable pageable) {

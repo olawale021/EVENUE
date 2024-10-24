@@ -1,6 +1,10 @@
 package com.example.evenue.models.events;
 
+import com.example.evenue.models.users.UserModel;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "event_categories")
@@ -12,6 +16,9 @@ public class EventCategory {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @ManyToMany(mappedBy = "preferredCategories")
+    private Set<UserModel> users = new HashSet<>();
 
     // Constructors
     public EventCategory() {}
